@@ -751,6 +751,11 @@ async function exportMonthToPdf() {
     const lastDay = new Date(year, month + 1, 0);
     const totalDays = lastDay.getDate();
 
+    // SEG = 0 ... DOM = 6
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const totalCells = startOffset + totalDays;
+    const totalWeeks = Math.ceil(totalCells / 7);
+
     const tempDiv = document.createElement('div');
     tempDiv.style.width = '297mm';
     tempDiv.style.padding = '20px';
@@ -759,82 +764,134 @@ async function exportMonthToPdf() {
     tempDiv.style.left = '-9999px';
     tempDiv.style.fontFamily = 'Arial, sans-serif';
 
-    let cells = [];
+    let currentDay = 1;
+    let weeksHtml = '';
 
-    const startOffset = (firstDay.getDay() + 6) % 7;
+    for (let week = 0; week < totalWeeks; week++) {
+        let weekHtml = '';
 
-    // vazios iniciais
-    for (let i = 0; i < startOffset; i++) {
-        cells.push(emptyCell());
-    }
+        for (let dow = 0; dow < 7; dow++) {
+            const cellIndex = week * 7 + dow;
 
-    // dias do mês
-    for (let day = 1; day <= totalDays; day++) {
-        const date = new Date(year, month, day);
-        const jsDay = date.getDay();
-        const isSpecial = jsDay === 0 || jsDay === 6 || isHolidayDate(date);
+            if (cellIndex < startOffset || currentDay > totalDays) {
+                weekHtml += emptyCell();
+                continue;
+            }
 
-        const dateStr = getDateString(date);
-        const dayData = appState.days[dateStr];
+            const date = new Date(year, month, currentDay);
+            const dateStr = getDateString(date);
+            const dayData = appState.days[dateStr];
+            const jsDay = date.getDay();
+            const isSpecial = jsDay === 0 || jsDay === 6 || isHolidayDate(date);
 
-        let lines = '';
-        for (let i = 0; i < 17; i++) {
-            const line = dayData?.lines?.[i];
-            lines += `
-                <div style="font-size:11px;border-bottom:1px solid #eee;height:18px">
-                    ${line ? renderLineWithColors(line) : '&nbsp;'}
+            let linesHtml = '';
+            for (let i = 0; i < 17; i++) {
+                const line = dayData?.lines?.[i];
+                const content =
+                    line && (line.text || line.html)
+                        ? renderLineWithColors(line)
+                        : '&nbsp;';
+
+                linesHtml += `
+                    <div style="
+                        display:flex;
+                        border-bottom:1px solid #e0e0e0;
+                        font-size:11px;
+                        height:18px;
+                    ">
+                        <span style="
+                            min-width:22px;
+                            font-size:10px;
+                            color:#999;
+                            font-weight:bold;
+                        ">${i + 1}.</span>
+                        <div style="flex:1;">${content}</div>
+                    </div>
+                `;
+            }
+
+            weekHtml += `
+                <div style="
+                    border:1px solid #000;
+                    background:${isSpecial ? '#fff5f5' : '#fff'};
+                    min-height:360px;
+                ">
+                    <div style="
+                        text-align:center;
+                        font-weight:bold;
+                        padding:6px;
+                        background:${isSpecial ? '#c41e3a' : '#f0f0f0'};
+                        color:${isSpecial ? '#fff' : '#000'};
+                        border-bottom:1px solid #000;
+                    ">
+                        ${currentDay}
+                    </div>
+                    <div style="padding:5px;">
+                        ${linesHtml}
+                    </div>
                 </div>
             `;
+
+            currentDay++;
         }
 
-        cells.push(`
+        weeksHtml += `
             <div style="
-                border:1px solid #000;
-                min-height:360px;
-                box-sizing:border-box;
-                background:${isSpecial ? '#fff5f5' : '#fff'};
+                display:grid;
+                grid-template-columns:repeat(7, 1fr);
             ">
-                <div style="
-                    background:${isSpecial ? '#c41e3a' : '#f0f0f0'};
-                    color:${isSpecial ? '#fff' : '#000'};
-                    text-align:center;
-                    font-weight:bold;
-                    padding:6px;
-                    border-bottom:1px solid #000;
-                ">${day}</div>
-                <div style="padding:5px">${lines}</div>
+                ${weekHtml}
             </div>
-        `);
-    }
-
-    // vazios finais
-    while (cells.length % 7 !== 0) {
-        cells.push(emptyCell());
+        `;
     }
 
     tempDiv.innerHTML = `
-        <h1 style="text-align:center;color:#c41e3a">
-            AGENDA MENSAL – ${monthName}
-        </h1>
+        <h1 style="
+            text-align:center;
+            margin-bottom:20px;
+            font-size:36px;
+            color:#c41e3a;
+        ">AGENDA MENSAL – ${monthName}</h1>
 
-        <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            background:#eaeaea;
+            border:1px solid #000;
+        ">
             ${['SEG','TER','QUA','QUI','SEX','SAB','DOM']
-                .map(d => `<div style="text-align:center;font-weight:bold;padding:8px;border:1px solid #000">${d}</div>`)
+                .map(d => `<div style="padding:10px;text-align:center;font-weight:bold;border-right:1px solid #000">${d}</div>`)
                 .join('')}
-            ${cells.join('')}
         </div>
+
+        ${weeksHtml}
     `;
 
     document.body.appendChild(tempDiv);
 
-    const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: '#fff' });
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+    const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        backgroundColor: '#fff'
+    });
+
+    const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+    });
+
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0);
     pdf.save(`agenda-${monthName.replace(/\s+/g, '-')}.pdf`);
 
     document.body.removeChild(tempDiv);
 
     function emptyCell() {
-        return `<div style="border:1px solid #000;min-height:360px"></div>`;
+        return `
+            <div style="
+                border:1px solid #000;
+                background:#fff;
+                min-height:360px;
+            "></div>
+        `;
     }
 }
