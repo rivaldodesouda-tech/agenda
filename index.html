@@ -30,7 +30,13 @@
             <div class="view-controls">
                 <button id="viewWeekly" class="view-btn active">📅 Semanal</button>
                 <button id="viewMonthly" class="view-btn">📆 Mensal</button>
-                <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
+                <div class="print-selector-container">
+                    <select id="printTypeSelector" class="print-select">
+                        <option value="a4">Impressão Comum (A4)</option>
+                        <option value="plotter">Impressão Especial (Plotter)</option>
+                    </select>
+                    <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
+                </div>
                 <button id="printWeekBtn" class="btn btn-print">🖨️ Imprimir Semana</button>
             </div>
 

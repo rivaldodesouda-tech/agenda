@@ -415,6 +415,27 @@ function openDayEdit(date) {
                 appState.selectedLineIndex = index;
             });
 
+            // Tratar Tab e Enter para mudar de linha
+            lineEditable.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    var nextIndex = index + 1;
+                    if (nextIndex < 30) {
+                        var nextLine = notebookLines.querySelector('[data-index="' + nextIndex + '"]');
+                        if (nextLine) {
+                            nextLine.focus();
+                            // Colocar o cursor no final do texto se houver
+                            var range = document.createRange();
+                            var sel = window.getSelection();
+                            range.selectNodeContents(nextLine);
+                            range.collapse(false);
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        }
+                    }
+                }
+            });
+
             lineWrapper.appendChild(lineNum);
             lineWrapper.appendChild(lineEditable);
             notebookLines.appendChild(lineWrapper);
@@ -614,6 +635,15 @@ function isHolidayDate(date) {
 // ========== IMPRESSÃO ==========
 
 function printMonth() {
+    var printType = document.getElementById('printTypeSelector').value;
+    if (printType === 'plotter') {
+        printMonthPlotter();
+    } else {
+        printMonthA4();
+    }
+}
+
+function printMonthA4() {
     var year = appState.currentDate.getFullYear();
     var month = appState.currentDate.getMonth();
     var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
@@ -678,6 +708,65 @@ function printMonth() {
     setTimeout(function() { printWindow.print(); }, 500);
 }
 
+function printMonthPlotter() {
+    var year = appState.currentDate.getFullYear();
+    var month = appState.currentDate.getMonth();
+    var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+
+    var printWindow = window.open('', '', 'width=800,height=600');
+    
+    var firstDay = new Date(year, month, 1);
+    var lastDay = new Date(year, month + 1, 0);
+    
+    var daysHtml = '';
+    var currentDate = new Date(firstDay);
+    
+    while (currentDate <= lastDay) {
+        var dateStr = getDateString(currentDate);
+        var dayData = appState.days[dateStr] || { lines: [] };
+        var isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
+        var dayName = getDayName(currentDate.getDay());
+        
+        var linesHtml = '';
+        for (var i = 0; i < 17; i++) {
+            var line = dayData.lines[i] || { text: '', spans: [] };
+            linesHtml += '<div class="plotter-line"><span class="plotter-line-num">' + (i + 1) + '.</span>' + 
+                         '<div class="plotter-line-content">' + renderLineWithColors(line) + '</div></div>';
+        }
+
+        daysHtml += '<div class="plotter-day' + (isSpecial ? ' special' : '') + '">' +
+                        '<div class="plotter-day-header">' + dayName + ', ' + currentDate.getDate() + '</div>' +
+                        '<div class="plotter-day-content">' + linesHtml + '</div>' +
+                    '</div>';
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Impressão Plotter - ' + monthName + '</title>' +
+        '<style>' +
+        '@page { size: 600mm 5000mm; margin: 0; }' +
+        'body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; background: white; width: 600mm; }' +
+        '.plotter-month-header { text-align: center; font-size: 48px; font-weight: bold; margin-bottom: 30px; border-bottom: 5px solid #000; padding-bottom: 10px; }' +
+        '.plotter-container { display: flex; flex-direction: column; width: 100%; }' +
+        '.plotter-day { border: 2px solid #000; margin-bottom: 15px; page-break-inside: avoid; display: flex; flex-direction: column; }' +
+        '.plotter-day.special { border-color: #FF0000; }' +
+        '.plotter-day-header { background: #eee; padding: 10px 20px; font-size: 32px; font-weight: bold; border-bottom: 2px solid #000; }' +
+        '.plotter-day.special .plotter-day-header { background: #ffe0e0; color: #FF0000; border-bottom-color: #FF0000; }' +
+        '.plotter-day-content { padding: 10px 20px; display: flex; flex-direction: column; }' +
+        '.plotter-line { display: flex; align-items: flex-start; border-bottom: 1px solid #eee; padding: 8px 0; min-height: 45px; }' +
+        '.plotter-line:last-child { border-bottom: none; }' +
+        '.plotter-line-num { min-width: 60px; font-weight: bold; font-size: 24px; color: #888; }' +
+        '.plotter-line-content { flex: 1; font-size: 28px; line-height: 1.2; word-break: break-word; }' +
+        '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
+        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
+        '<div class="plotter-month-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
+        '<div class="plotter-container">' + daysHtml + '</div></body></html>';
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(function() { printWindow.print(); }, 500);
+}
+
 function printDay() {
     if (!appState.selectedDay) return;
     var dateParts = appState.selectedDay.split('-');
@@ -687,12 +776,23 @@ function printDay() {
     var isSpecial = date.getDay() === 0 || date.getDay() === 6 || isHolidayDate(date);
 
     var printWindow = window.open('', '', 'width=800,height=600');
-    var linesHtml = dayData.lines.map(function(l, idx) {
-        if (l && l.text && l.text.trim() !== '') {
-            return '<div class="print-line"><span class="print-line-num">' + (idx + 1) + '.</span><div class="print-line-content">' + renderLineWithColors(l) + '</div></div>';
-        }
-        return '';
-    }).join('');
+    
+    // Filtrar apenas linhas com conteúdo
+    var linesHtml = '';
+    var hasContent = false;
+    if (dayData && dayData.lines) {
+        linesHtml = dayData.lines.map(function(l, idx) {
+            if (l && l.text && l.text.trim() !== '') {
+                hasContent = true;
+                return '<div class="print-line"><span class="print-line-num">' + (idx + 1) + '.</span><div class="print-line-content">' + renderLineWithColors(l) + '</div></div>';
+            }
+            return '';
+        }).join('');
+    }
+
+    if (!hasContent) {
+        linesHtml = '<div style="text-align: center; padding: 50px;">Nenhuma anotação encontrada para este dia.</div>';
+    }
 
     var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Impressão - ' + dayName + '</title>' +
         '<style>' +
