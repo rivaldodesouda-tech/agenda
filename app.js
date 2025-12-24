@@ -667,12 +667,12 @@ function printMonth(mode) {
         '.print-month-grid { display: block; width: 100%; border-top: 1px solid #000; border-left: 1px solid #000; overflow: hidden; }' +
         '.print-month-day-header { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; background: #eee; box-sizing: border-box; }' +
         '.print-month-day { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; height: 96.67mm; position: relative; overflow: hidden; box-sizing: border-box; }' +
-        '.print-month-num { font-weight: bold; font-size: 10px; padding: 2px; }' +
+        '.print-month-num { font-weight: bold; font-size: 14px !important; padding: 4px; color: #000 !important; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
         '.print-month-day.other-month { background: #f9f9f9; color: #ccc; }' +
         '.print-month-content { font-size: ' + (mode === 'large' ? '10px' : '10px') + '; line-height: ' + (mode === 'large' ? '1.1' : '1.1') + '; padding: 0 2px; }' +
-        '.print-month-line { border-bottom: 1px solid #999 !important; padding: ' + (mode === 'large' ? '1px' : '1px') + ' 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : '5.68mm') + '; box-sizing: border-box; }' +
-        '.print-line-num { min-width: 15px; font-weight: bold; margin-right: 2px; font-size: 8px; color: #000; }' +
+        '.print-month-line { border-bottom: 1.5px solid #000 !important; padding: ' + (mode === 'large' ? '1px' : '1px') + ' 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : '5.68mm') + '; box-sizing: border-box; }' +
+        '.print-line-num { min-width: 18px; font-weight: bold !important; margin-right: 4px; font-size: 10px !important; color: #000 !important; display: inline-block; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
         '<div class="print-month-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
