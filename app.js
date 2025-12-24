@@ -228,7 +228,7 @@ function renderMonthView() {
 
     var currentDate = new Date(startDate);
     for (var i = 0; i < 42; i++) {
-        var cell = createMonthDayCell(new Date(currentDate)); // Passa uma cópia da data
+        var cell = createMonthDayCell(new Date(currentDate));
         grid.appendChild(cell);
         currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -307,42 +307,34 @@ function createDayCardGrid(date) {
 
 function createMonthDayCell(date) {
     var cell = document.createElement('div');
-    cell.className = 'month-day';
+    var isOtherMonth = date.getMonth() !== appState.currentDate.getMonth();
+    var isSpecial = date.getDay() === 0 || date.getDay() === 6 || isHolidayDate(date);
+    
+    cell.className = 'month-day-cell' + (isOtherMonth ? ' other-month' : '') + (isSpecial ? ' special' : '');
     
     var dateStr = getDateString(date);
-    var isOtherMonth = date.getMonth() !== appState.currentDate.getMonth();
-    var isToday = dateStr === getDateString(new Date());
-    var isSpecial = date.getDay() === 0 || date.getDay() === 6 || isHolidayDate(date);
-
-    if (isOtherMonth) cell.classList.add('other-month');
-    if (isToday) cell.classList.add('today');
-    if (isSpecial) cell.classList.add('special');
-
-    var num = document.createElement('div');
-    num.className = 'month-day-num';
-    num.textContent = date.getDate();
-    cell.appendChild(num);
-
-    var content = document.createElement('div');
-    content.className = 'month-day-content';
-    
     var dayData = appState.days[dateStr];
+    
+    var html = '<div class="month-day-num">' + date.getDate() + '</div>';
+    html += '<div class="month-day-content">';
+    
     if (dayData && dayData.lines) {
         dayData.lines.forEach(function(line, idx) {
             if (line && line.text && line.text.trim() !== '') {
-                var lineDiv = document.createElement('div');
-                lineDiv.className = 'month-line-preview';
-                lineDiv.innerHTML = '<span class="line-num">' + (idx + 1) + '.</span>' + renderLineWithColors(line);
-                content.appendChild(lineDiv);
+                html += '<div class="month-line-preview">' + renderLineWithColors(line) + '</div>';
             }
         });
     }
-    cell.appendChild(content);
-
+    
+    html += '</div>';
+    cell.innerHTML = html;
+    
     cell.addEventListener('click', function() {
-        openDayEdit(date);
+        appState.currentDate = new Date(date);
+        appState.view = 'week';
+        renderWeekView();
     });
-
+    
     return cell;
 }
 
@@ -355,112 +347,66 @@ function openDayEdit(date) {
         dayData.lines = Array(30).fill(null).map(function() { return { text: '', spans: [] }; });
     }
 
+    var editView = document.getElementById('dayEditView');
     var info = document.getElementById('editDayInfo');
-    var dayName = getDayName(date.getDay());
-    info.textContent = dayName + ', ' + date.toLocaleDateString('pt-BR');
-
+    info.textContent = getDayName(date.getDay()) + ', ' + date.getDate() + ' de ' + date.toLocaleDateString('pt-BR', { month: 'long' });
+    
     var notebook = document.getElementById('notebookLines');
     notebook.innerHTML = '';
 
-    for (var i = 0; i < 30; i++) {
-        var line = dayData.lines[i] || { text: '', spans: [] };
-        notebook.appendChild(createNotebookLine(i, line));
-    }
+    dayData.lines.forEach(function(line, index) {
+        var lineWrapper = document.createElement('div');
+        lineWrapper.className = 'notebook-line-wrapper';
 
-    document.getElementById('mainView').style.display = 'none';
-    document.getElementById('dayEditView').style.display = 'flex';
-    
-    // Resetar seleção
-    appState.selectedLineIndex = null;
-}
+        var lineNum = document.createElement('div');
+        lineNum.className = 'line-number';
+        lineNum.textContent = (index + 1) + '.';
 
-function createNotebookLine(index, lineData) {
-    var wrapper = document.createElement('div');
-    wrapper.className = 'notebook-line-wrapper';
-
-    var num = document.createElement('div');
-    num.className = 'notebook-line-num';
-    num.textContent = (index + 1) + '.';
-
-    var content = document.createElement('div');
-    content.className = 'notebook-line-content';
-    content.contentEditable = true;
-    content.setAttribute('data-index', index);
-    
-    if (lineData) {
-        content.innerHTML = renderLineWithColors(lineData);
-    }
-
-    content.addEventListener('input', function() {
-        updateLineData(index, this);
-    });
-
-    content.addEventListener('focus', function() {
-        appState.selectedLineIndex = index;
-        highlightActiveLine(wrapper);
-    });
-
-    // Navegação por Tab e Enter (Retorno no iPhone)
-    content.addEventListener('keydown', function(e) {
-        if (e.key === 'Tab' || e.key === 'Enter') {
-            e.preventDefault();
-            var nextIndex = index + 1;
-            if (nextIndex < 30) {
-                var nextLine = document.querySelector('[data-index="' + nextIndex + '"]');
-                if (nextLine) {
-                    nextLine.focus();
-                    // Colocar cursor no final do texto se houver
-                    var range = document.createRange();
-                    var sel = window.getSelection();
-                    range.selectNodeContents(nextLine);
-                    range.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
-            }
+        var lineDiv = document.createElement('div');
+        lineDiv.className = 'notebook-line';
+        lineDiv.contentEditable = true;
+        lineDiv.setAttribute('data-index', index);
+        
+        if (line && line.text) {
+            lineDiv.innerHTML = line.html || line.text;
         }
+
+        lineDiv.addEventListener('input', function() {
+            updateLineData(index, this);
+        });
+
+        lineDiv.addEventListener('focus', function() {
+            appState.selectedLineIndex = index;
+        });
+
+        lineWrapper.appendChild(lineNum);
+        lineWrapper.appendChild(lineDiv);
+        notebook.appendChild(lineWrapper);
     });
 
-    // Suporte para colar mantendo apenas formatação básica (cores, negrito, itálico)
-    content.addEventListener('paste', function(e) {
-        e.preventDefault();
-        var text = (e.originalEvent || e).clipboardData.getData('text/plain');
-        document.execCommand('insertHTML', false, text);
-    });
-
-    wrapper.appendChild(num);
-    wrapper.appendChild(content);
-    return wrapper;
-}
-
-function highlightActiveLine(activeWrapper) {
-    var all = document.querySelectorAll('.notebook-line-wrapper');
-    all.forEach(function(w) { w.classList.remove('active'); });
-    activeWrapper.classList.add('active');
-}
-
-function updateLineData(index, element) {
-    var dateStr = appState.selectedDay;
-    if (!appState.days[dateStr]) {
-        appState.days[dateStr] = { lines: Array(30).fill(null).map(function() { return { html: '' }; }) };
-    }
-    
-    // Salvar o HTML completo para preservar cores, negrito e itálico
-    appState.days[dateStr].lines[index] = {
-        html: element.innerHTML
-    };
-    
-    saveDataToStorage();
+    editView.style.display = 'flex';
+    document.getElementById('mainView').style.display = 'none';
 }
 
 function closeDayEdit() {
-    document.getElementById('mainView').style.display = 'flex';
     document.getElementById('dayEditView').style.display = 'none';
-    if (appState.view === 'week') {
-        renderWeekView();
-    } else {
-        renderMonthView();
+    document.getElementById('mainView').style.display = 'flex';
+    saveDataToStorage();
+    renderWeekView();
+}
+
+function updateLineData(index, element) {
+    if (!appState.selectedDay) return;
+    
+    if (!appState.days[appState.selectedDay]) {
+        appState.days[appState.selectedDay] = { lines: Array(30).fill(null).map(function() { return { text: '', spans: [] }; }) };
     }
+    
+    appState.days[appState.selectedDay].lines[index] = {
+        text: element.innerText,
+        html: element.innerHTML
+    };
+    saveDataToStorage();
 }
 
 // ========== PALETA DE CORES ==========
@@ -478,30 +424,17 @@ function renderColorPalette() {
             appState.selectedColor = index;
             document.querySelectorAll('.color-btn').forEach(function(b) { b.classList.remove('active'); });
             btn.classList.add('active');
-            applyColorToSelection();
+            applyColorToSelection(color);
         });
         palette.appendChild(btn);
     });
 }
 
-function applyColorToSelection() {
-    var selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-
-    var range = selection.getRangeAt(0);
-    if (range.collapsed) return;
-
-    var color = COLORS[appState.selectedColor];
-    
-    // Usar execCommand para compatibilidade e simplicidade
-    // Se for preto ou cinza (últimas cores), aplica como background
-    if (appState.selectedColor >= COLORS.length - 2) {
-        document.execCommand('backColor', false, color);
-    } else {
+function applyColorToSelection(color) {
+    if (window.getSelection().rangeCount > 0) {
         document.execCommand('foreColor', false, color);
     }
     
-    // Forçar atualização do estado
     if (appState.selectedLineIndex !== null) {
         var element = document.querySelector('[data-index="' + appState.selectedLineIndex + '"]');
         if (element) {
@@ -518,6 +451,10 @@ function getDateString(date) {
     return y + '-' + m + '-' + d;
 }
 
+function formatDate(date) {
+    return String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0') + '/' + date.getFullYear();
+}
+
 function getDayName(dayIndex) {
     var days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
     return days[dayIndex];
@@ -531,15 +468,12 @@ function isHolidayDate(date) {
 
 function renderLineWithColors(lineData) {
     if (!lineData) return '';
-    // Se tiver HTML (novo formato), retorna o HTML
     if (lineData.html) return lineData.html;
-    // Se tiver apenas texto (formato antigo), retorna o texto
     if (lineData.text) return lineData.text;
     return '';
 }
 
 // ========== IMPRESSÃO ==========
-
 function showPrintModeSelector() {
     var modal = document.createElement('div');
     modal.id = 'printModeModal';
@@ -559,8 +493,6 @@ function showPrintModeSelector() {
     var normalBtn = document.createElement('button');
     normalBtn.textContent = '📄 Impressão Normal';
     normalBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;';
-    normalBtn.onmouseover = function() { this.style.background = '#45a049'; };
-    normalBtn.onmouseout = function() { this.style.background = '#4CAF50'; };
     normalBtn.onclick = function() {
         document.body.removeChild(modal);
         printMonth('normal');
@@ -569,8 +501,6 @@ function showPrintModeSelector() {
     var largeBtn = document.createElement('button');
     largeBtn.textContent = '📋 Impressão Grande (17 linhas)';
     largeBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;';
-    largeBtn.onmouseover = function() { this.style.background = '#0b7dda'; };
-    largeBtn.onmouseout = function() { this.style.background = '#2196F3'; };
     largeBtn.onclick = function() {
         document.body.removeChild(modal);
         printMonth('large');
@@ -579,8 +509,6 @@ function showPrintModeSelector() {
     var cancelBtn = document.createElement('button');
     cancelBtn.textContent = '✕ Cancelar';
     cancelBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;';
-    cancelBtn.onmouseover = function() { this.style.background = '#da190b'; };
-    cancelBtn.onmouseout = function() { this.style.background = '#f44336'; };
     cancelBtn.onclick = function() {
         document.body.removeChild(modal);
     };
@@ -619,14 +547,12 @@ function printMonth(mode) {
             
             var linesHtml = '';
             if (mode === 'large') {
-                // Modo Grande: mostrar exatamente 17 linhas numeradas
                 for (var lineIdx = 0; lineIdx < 17; lineIdx++) {
                     var line = (dayData && dayData.lines && dayData.lines[lineIdx]) ? dayData.lines[lineIdx] : { text: '', spans: [] };
                     var lineContent = (line && line.text && line.text.trim() !== '') ? renderLineWithColors(line) : '&nbsp;';
                     linesHtml += '<div class="print-month-line"><span class="print-line-num">' + (lineIdx + 1) + '.</span>' + lineContent + '</div>';
                 }
             } else {
-                // Modo Normal: mostrar apenas linhas com conteúdo
                 if (dayData && dayData.lines) {
                     linesHtml = dayData.lines.map(function(l, idx) {
                         if (l && l.text && l.text.trim() !== '') {
@@ -642,7 +568,6 @@ function printMonth(mode) {
                             '<div class="print-month-content">' + linesHtml + '</div>' +
                         '</div>';
         } else {
-            // Célula invisível para dias de outros meses - removendo completamente bordas e visibilidade
             gridHtml += '<div class="print-month-day other-month" style="border: none !important; background: none !important; visibility: hidden !important;"></div>';
         }
         
@@ -651,20 +576,20 @@ function printMonth(mode) {
 
     var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Calendário Mensal - ' + monthName + '</title>' +
         '<style>' +
-        '@page { size: 600mm 600mm; margin: 5mm; }' +
+        '@page { size: ' + (mode === 'large' ? '600mm 600mm' : 'A4 landscape') + '; margin: 5mm; }' +
         'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; }' +
         '.print-month-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; height: 15mm; }' +
         '.print-month-grid { display: block; width: 100%; border-top: 1px solid #000; border-left: 1px solid #000; overflow: hidden; }' +
         '.print-month-day-header { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; background: #eee; box-sizing: border-box; }' +
-        '.print-month-day { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; height: 96.67mm; position: relative; overflow: hidden; box-sizing: border-box; }' +
+        '.print-month-day { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; height: ' + (mode === 'large' ? '96.67mm' : '2.8cm') + '; position: relative; overflow: hidden; box-sizing: border-box; }' +
         '.print-month-num { font-weight: bold; font-size: 14px !important; padding: 4px; color: #000 !important; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
         '.print-month-day.other-month { background: none !important; border: none !important; visibility: hidden !important; }' +
-        '.print-month-content { font-size: ' + (mode === 'large' ? '10px' : '10px') + '; line-height: ' + (mode === 'large' ? '1.1' : '1.1') + '; padding: 0 2px; }' +
-        '.print-month-line { border-bottom: 1.5px solid #000 !important; padding: ' + (mode === 'large' ? '1px' : '1px') + ' 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : '5.68mm') + '; box-sizing: border-box; }' +
-        '.print-line-num { min-width: 18px; font-weight: bold !important; margin-right: 4px; font-size: 10px !important; color: #000 !important; display: inline-block; }' +
+        '.print-month-content { font-size: ' + (mode === 'large' ? '10px' : '6px') + '; line-height: 1.1; padding: 0 2px; }' +
+        '.print-month-line { border-bottom: ' + (mode === 'large' ? '1.5px solid #000' : '0.1px solid #eee') + ' !important; padding: 1px 0; word-break: break-word; display: flex; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : 'auto') + '; box-sizing: border-box; }' +
+        '.print-line-num { min-width: ' + (mode === 'large' ? '18px' : '12px') + '; font-weight: bold !important; margin-right: 4px; font-size: ' + (mode === 'large' ? '10px' : '5px') + ' !important; color: #000 !important; display: inline-block; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
+        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
         '<div class="print-month-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
         '<div class="print-month-grid">' +
         '<div class="print-month-day-header">DOM</div><div class="print-month-day-header">SEG</div><div class="print-month-day-header">TER</div>' +
@@ -700,9 +625,9 @@ function printDay() {
         '.print-date { font-size: 24px; font-weight: bold; }' +
         '.print-day-name { font-size: 18px; color: #666; }' +
         '.print-content { padding: 0 10px; }' +
-        '.print-line { border-bottom: 1px solid #eee; padding: 8px 0; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; }' +
+        '.print-line { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; align-items: flex-start; }' +
         '.print-line-num { min-width: 30px; font-weight: bold; color: #999; }' +
-        '.print-line-content { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }' +
+        '.print-line-content { flex: 1; }' +
         '.special .print-date { color: #FF0000; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); };</script></head><body class="' + (isSpecial ? 'special' : '') + '">' +
@@ -750,12 +675,12 @@ function printWeek() {
         '@page { size: A4 landscape; margin: 5mm; }' +
         'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; }' +
         '.print-week-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 10px; }' +
-        '.print-week-grid { display: -webkit-box; display: -webkit-flex; display: flex; border-top: 1px solid #000; border-left: 1px solid #000; height: 180mm; }' +
-        '.print-week-day { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; border-right: 1px solid #000; border-bottom: 1px solid #000; position: relative; overflow: hidden; }' +
+        '.print-week-grid { display: flex; border-top: 1px solid #000; border-left: 1px solid #000; height: 180mm; }' +
+        '.print-week-day { flex: 1; border-right: 1px solid #000; border-bottom: 1px solid #000; position: relative; overflow: hidden; }' +
         '.print-week-header { background: #eee; padding: 5px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; font-size: 12px; }' +
         '.print-week-day.special .print-week-header { color: #FF0000; }' +
         '.print-week-content { padding: 5px; font-size: 10px; }' +
-        '.print-week-line { border-bottom: 0.1px solid #eee; padding: 2px 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; }' +
+        '.print-week-line { border-bottom: 0.1px solid #eee; padding: 2px 0; word-break: break-word; display: flex; align-items: flex-start; }' +
         '.print-line-num { min-width: 20px; font-weight: bold; color: #999; font-size: 8px; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +

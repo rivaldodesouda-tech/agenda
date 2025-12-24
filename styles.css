@@ -20,23 +20,45 @@ html, body {
 
 body {
     overflow-x: hidden;
+    position: fixed;
     width: 100%;
-    min-height: 100vh;
-    background-color: #f5f5f5;
+    height: 100vh;
+    height: 100dvh;
 }
 
 /* ========== LAYOUT GERAL ========== */
 #app {
     width: 100%;
-    display: block; /* Mudar de flex para block para evitar problemas de altura */
+    height: 100%;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    /* Ajuste para Dynamic Island (iPhone 17) */
     padding-top: max(44px, env(safe-area-inset-top)); 
     padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
 }
 
 .main-view {
-    width: 100%;
-    display: block;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    flex-direction: column;
     padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
 }
 
 /* ========== HEADER ========== */
@@ -147,18 +169,33 @@ body {
 
 /* ========== VISÃO SEMANAL (GRID) ========== */
 .week-view-container {
-    width: 100%;
-    display: block;
-    min-height: 500px;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
 .week-grid {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
     display: -webkit-box !important;
     display: -webkit-flex !important;
     display: flex !important;
-    width: 100%;
+    -webkit-flex-wrap: nowrap !important;
+    flex-wrap: nowrap !important;
+    padding: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background: white;
-    min-height: 600px;
 }
 
 .week-column {
@@ -172,9 +209,8 @@ body {
     -webkit-box-direction: normal;
     -webkit-flex-direction: column;
     flex-direction: column;
-    height: auto; /* Mudar de 100% para auto para evitar colapso */
-    min-height: 100%;
-    overflow-y: visible;
+    height: 100%;
+    overflow-y: auto;
 }
 
 /* ========== CARTÃO DE DIA (GRID) ========== */
@@ -301,7 +337,6 @@ body {
     display: flex;
     -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
-    width: 100%; /* Garantir largura total */
 }
 
 .month-day-header {
@@ -550,137 +585,4 @@ body {
 .btn-secondary {
     background-color: #e2e8f0;
     color: #333;
-}
-
-/* ========== ESTILOS DE IMPRESSÃO ========== */
-@media print {
-    body {
-        /* Remove margens e padding padrão da impressão */
-        margin: 0;
-        padding: 0;
-        /* Garante que o conteúdo caiba na página */
-        width: 100%;
-        height: auto;
-        overflow: visible !important;
-    }
-
-    #app {
-        /* Remove padding de safe-area para impressão */
-        padding: 0 !important;
-        display: block !important;
-    }
-
-    .header, .view-controls, #dayEditView {
-        /* Oculta elementos de navegação e edição */
-        display: none !important;
-    }
-
-    .main-view {
-        /* Garante que a visualização principal seja visível */
-        display: block !important;
-        flex: none !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-
-    /* Redução de fonte para a visualização semanal */
-    .week-grid {
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        overflow: visible !important;
-        height: auto !important;
-        width: 100%;
-    }
-
-    .week-column {
-        flex: 1 1 50% !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-
-    .day-card-grid {
-        /* Ajusta o tamanho do cartão e remove bordas desnecessárias */
-        border: 1px solid #ccc !important;
-        margin: 0;
-        padding: 0;
-        box-shadow: none;
-        page-break-inside: avoid; /* Evita quebra de página dentro do cartão */
-    }
-
-    .day-card-header {
-        font-size: 10px !important; /* Fonte menor para o cabeçalho */
-        padding: 4px 6px !important;
-    }
-
-    .day-card-content {
-        font-size: 8px !important; /* Fonte menor para o conteúdo */
-        max-height: none !important; /* Permite que o conteúdo se expanda */
-        overflow: visible !important;
-        padding: 4px 6px !important;
-    }
-
-    .line-number-preview, .day-line-preview {
-        font-size: 6px !important; /* Fonte ainda menor para as linhas */
-        min-height: 10px !important;
-    }
-
-    /* Redução de fonte para a visualização mensal */
-    .month-view {
-        display: block !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-
-    .month-calendar {
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: visible !important;
-    }
-
-    .month-day-header {
-        font-size: 8px !important;
-        padding: 4px !important;
-    }
-
-    .month-day-cell {
-        height: auto !important; /* Altura automática para caber o conteúdo */
-        min-height: 50px;
-        font-size: 8px !important;
-        padding: 1px !important;
-        page-break-inside: avoid;
-    }
-
-    .month-day-number {
-        font-size: 10px !important;
-        margin-bottom: 1px !important;
-    }
-
-    .month-line-number, .month-line-content {
-        font-size: 6px !important;
-    }
-}
-
-/* ========== SELETOR DE IMPRESSÃO ========== */
-.print-selector-container {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-align: center;
-    -webkit-align-items: center;
-    align-items: center;
-    margin-right: 10px;
-    margin-bottom: 5px;
-}
-
-.print-select {
-    padding: 8px;
-    border: 2px solid #e2e8f0;
-    border-radius: 6px;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    margin-right: 5px;
-    background: white;
-    cursor: pointer;
-    -webkit-appearance: none;
-    appearance: none;
 }

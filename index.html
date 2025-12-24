@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="debug-log" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:white; font-size:10px; z-index:9999; max-height:100px; overflow:auto; padding:5px;"></div>
     <div id="app">
         <!-- Visão Principal (Semanal/Mensal) -->
         <div id="mainView" class="main-view">
@@ -31,13 +30,7 @@
             <div class="view-controls">
                 <button id="viewWeekly" class="view-btn active">📅 Semanal</button>
                 <button id="viewMonthly" class="view-btn">📆 Mensal</button>
-                <div class="print-selector-container">
-                    <select id="printTypeSelector" class="print-select">
-                        <option value="a4">Impressão Comum (A4)</option>
-                        <option value="plotter">Impressão Especial (Plotter)</option>
-                    </select>
-                    <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
-                </div>
+                <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
                 <button id="printWeekBtn" class="btn btn-print">🖨️ Imprimir Semana</button>
             </div>
 
