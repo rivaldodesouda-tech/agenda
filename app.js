@@ -231,7 +231,6 @@ function renderWeekView() {
     }
 }
 
-
 // ========== RENDERIZAÇÃO MENSAL ==========
 function renderMonthView() {
     var monthCalendar = document.getElementById('monthCalendar');
@@ -708,70 +707,173 @@ function printMonthA4() {
 function printMonthPlotter() {
     var year = appState.currentDate.getFullYear();
     var month = appState.currentDate.getMonth();
-    var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+    var monthName = appState.currentDate
+        .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+        .toUpperCase();
 
     var printWindow = window.open('', '', 'width=1200,height=800');
-    
+
     var firstDay = new Date(year, month, 1);
     var startDate = new Date(firstDay);
     startDate.setDate(firstDay.getDate() - firstDay.getDay());
 
     var gridHtml = '';
     var currentDate = new Date(startDate);
-    
+
     for (var i = 0; i < 42; i++) {
         var dateStr = getDateString(currentDate);
         var dayData = appState.days[dateStr] || { lines: [] };
+
         var isOtherMonth = currentDate.getMonth() !== month;
-        var isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
-        
+        var isSpecial =
+            currentDate.getDay() === 0 ||
+            currentDate.getDay() === 6 ||
+            isHolidayDate(currentDate);
+
         var linesHtml = '';
-        // Sempre renderiza 17 linhas para dias do mês vigente
+
+        // 🔹 SEMPRE 17 LINHAS FIXAS
         if (!isOtherMonth) {
-            for (var j = 0; j < 17; j++) {
-                var line = dayData.lines[j] || { text: '', spans: [] };
-                linesHtml += '<div class="plotter-line"><span class="plotter-line-num">' + (j + 1) + '.</span>' + 
-                             '<div class="plotter-line-content">' + renderLineWithColors(line) + '</div></div>';
+            for (var lineIdx = 0; lineIdx < 17; lineIdx++) {
+                var line = dayData.lines[lineIdx] || { text: '', spans: [] };
+
+                var content =
+                    line.text && line.text.trim() !== ''
+                        ? renderLineWithColors(line)
+                        : '&nbsp;';
+
+                linesHtml +=
+                    '<div class="print-month-line">' +
+                        '<span class="print-line-num">' + (lineIdx + 1) + '.</span>' +
+                        content +
+                    '</div>';
             }
         }
 
-        gridHtml += '<div class="plotter-day' + (isOtherMonth ? ' other-month' : '') + (isSpecial ? ' special' : '') + '">' +
-                        '<div class="plotter-day-num">' + (isOtherMonth ? '' : currentDate.getDate()) + '</div>' +
-                        '<div class="plotter-day-content">' + linesHtml + '</div>' +
-                    '</div>';
-        
+        gridHtml +=
+            '<div class="print-month-day' +
+                (isOtherMonth ? ' other-month' : '') +
+                (isSpecial ? ' special' : '') +
+            '">' +
+                '<div class="print-month-num">' +
+                    (isOtherMonth ? '' : currentDate.getDate()) +
+                '</div>' +
+                '<div class="print-month-content">' + linesHtml + '</div>' +
+            '</div>';
+
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Calendário Plotter - ' + monthName + '</title>' +
+    var html =
+        '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
+        '<title>Impressão Larga - ' + monthName + '</title>' +
+
         '<style>' +
-        '@page { size: landscape; margin: 5mm; }' +
-        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; width: 100%; height: 100vh; }' +
-        '.plotter-header { text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }' +
-        '.plotter-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 3px solid #000; border-left: 3px solid #000; width: calc(100% - 10mm); height: 580mm; margin: 0 auto; }' +
-        '.plotter-day-header { border-right: 3px solid #000; border-bottom: 3px solid #000; text-align: center; font-weight: bold; font-size: 20px; padding: 10px; background: #f0f0f0; }' +
-        '.plotter-day-header.special { color: #FF0000; }' +
-        '.plotter-day { border-right: 3px solid #000; border-bottom: 3px solid #000; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }' +
-        '.plotter-day.special { border-color: #FF0000; }' +
-        '.plotter-day-num { font-weight: bold; font-size: 24px; padding: 5px 10px; border-bottom: 1px solid #eee; }' +
-        '.plotter-day.special .plotter-day-num { color: #FF0000; }' +
-        '.plotter-day.other-month { background: #fafafa; }' +
-        '.plotter-day-content { flex: 1; display: flex; flex-direction: column; padding: 5px; overflow: hidden; }' +
-        '.plotter-line { display: flex; align-items: center; border-bottom: 1px solid #eee; height: 5.8%; min-height: 0; }' +
-        '.plotter-line:last-child { border-bottom: none; }' +
-        '.plotter-line-num { min-width: 30px; font-weight: bold; font-size: 14px; color: #999; margin-right: 5px; }' +
-        '.plotter-line-content { flex: 1; font-size: 16px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
-        '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
-        '<div class="plotter-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
-        '<div class="plotter-grid">' +
-        '<div class="plotter-day-header special">DOM</div><div class="plotter-day-header">SEG</div><div class="plotter-day-header">TER</div>' +
-        '<div class="plotter-day-header">QUA</div><div class="plotter-day-header">QUI</div><div class="plotter-day-header">SEX</div><div class="plotter-day-header special">SAB</div>' +
-        gridHtml + '</div></body></html>';
+        '@page { size: 600mm 600mm; margin: 5mm; }' +
+
+        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }' +
+
+        '.print-month-header {' +
+            'text-align: center;' +
+            'font-size: 28px;' +
+            'font-weight: bold;' +
+            'margin-bottom: 10px;' +
+        '}' +
+
+        '.print-month-grid {' +
+            'display: grid;' +
+            'grid-template-columns: repeat(7, 1fr);' +
+            'border-top: 3px solid #000;' +
+            'border-left: 3px solid #000;' +
+        '}' +
+
+        '.print-month-day-header {' +
+            'border-right: 3px solid #000;' +
+            'border-bottom: 3px solid #000;' +
+            'text-align: center;' +
+            'font-weight: bold;' +
+            'font-size: 16px;' +
+            'padding: 6px;' +
+            'background: #f0f0f0;' +
+        '}' +
+
+        '.print-month-day {' +
+            'border-right: 3px solid #000;' +
+            'border-bottom: 3px solid #000;' +
+            'position: relative;' +
+            'overflow: hidden;' +
+        '}' +
+
+        '.print-month-day.special {' +
+            'border-color: #FF0000;' +
+        '}' +
+
+        '.print-month-day.other-month {' +
+            'background: #fafafa;' +
+        '}' +
+
+        '.print-month-num {' +
+            'font-weight: bold;' +
+            'font-size: 14px;' +
+            'padding: 4px;' +
+        '}' +
+
+        '.print-month-day.special .print-month-num {' +
+            'color: #FF0000;' +
+        '}' +
+
+        '.print-month-content {' +
+            'font-size: 10px;' +
+            'line-height: 1.1;' +
+            'padding: 0 2px;' +
+        '}' +
+
+        '.print-month-line {' +
+            'border-bottom: 1.5px solid #000;' +
+            'padding: 1px 0;' +
+            'height: 5.2mm;' +   // 🔴 ALTURA CRÍTICA DAS 17 LINHAS
+            'box-sizing: border-box;' +
+            'display: flex;' +
+            'align-items: flex-start;' +
+        '}' +
+
+        '.print-line-num {' +
+            'min-width: 18px;' +
+            'font-weight: bold;' +
+            'font-size: 10px;' +
+            'margin-right: 4px;' +
+            'color: #000;' +
+        '}' +
+
+        '@media print {' +
+            '* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
+        '}' +
+        '</style>' +
+
+        '<script>window.onafterprint = function(){ window.close(); };</script>' +
+        '</head><body>' +
+
+        '<div class="print-month-header">PLANEJADOR MENSAL — ' + monthName + '</div>' +
+
+        '<div class="print-month-grid">' +
+            '<div class="print-month-day-header">DOM</div>' +
+            '<div class="print-month-day-header">SEG</div>' +
+            '<div class="print-month-day-header">TER</div>' +
+            '<div class="print-month-day-header">QUA</div>' +
+            '<div class="print-month-day-header">QUI</div>' +
+            '<div class="print-month-day-header">SEX</div>' +
+            '<div class="print-month-day-header">SAB</div>' +
+            gridHtml +
+        '</div>' +
+
+        '</body></html>';
 
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(function() { printWindow.print(); }, 500);
+
+    setTimeout(function () {
+        printWindow.print();
+    }, 500);
 }
 
 function printDay() {
