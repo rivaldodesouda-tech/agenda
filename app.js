@@ -353,6 +353,8 @@ function openDayEdit(date) {
     
     var notebook = document.getElementById('notebookLines');
     notebook.innerHTML = '';
+    notebook.style.webkitUserSelect = 'text';
+    notebook.style.userSelect = 'text';
 
     dayData.lines.forEach(function(line, index) {
         var lineWrapper = document.createElement('div');

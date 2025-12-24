@@ -16,9 +16,10 @@ html, body {
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Prevenir scroll elástico no iOS */
+    /* Prevenir scroll elástico no iOS mas permitir interação */
     position: fixed;
     overflow: hidden;
+    touch-action: manipulation;
 }
 
 body {
@@ -160,6 +161,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .day-card-grid.weekend, .day-card-grid.holiday {
@@ -340,6 +343,9 @@ body {
     /* Estilo Highlight */
     border-radius: 3px;
     padding: 0 4px;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    cursor: text;
 }
 
 /* Garantir que o texto selecionado seja visível no iOS */
