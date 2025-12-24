@@ -577,7 +577,7 @@ function showPrintModeSelector() {
     };
     
     var largeBtn = document.createElement('button');
-    largeBtn.textContent = '📋 Impressão Grande (20 linhas)';
+    largeBtn.textContent = '📋 Impressão Grande (17 linhas)';
     largeBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;';
     largeBtn.onmouseover = function() { this.style.background = '#0b7dda'; };
     largeBtn.onmouseout = function() { this.style.background = '#2196F3'; };
@@ -629,8 +629,8 @@ function printMonth(mode) {
             
             var linesHtml = '';
             if (mode === 'large') {
-                // Modo Grande: mostrar todas as 20 linhas numeradas
-                for (var lineIdx = 0; lineIdx < 20; lineIdx++) {
+                // Modo Grande: mostrar exatamente 17 linhas numeradas
+                for (var lineIdx = 0; lineIdx < 17; lineIdx++) {
                     var line = (dayData && dayData.lines && dayData.lines[lineIdx]) ? dayData.lines[lineIdx] : { text: '', spans: [] };
                     var lineContent = (line && line.text && line.text.trim() !== '') ? renderLineWithColors(line) : '&nbsp;';
                     linesHtml += '<div class="print-month-line"><span class="print-line-num">' + (lineIdx + 1) + '.</span>' + lineContent + '</div>';
@@ -670,8 +670,8 @@ function printMonth(mode) {
         '.print-month-num { font-weight: bold; font-size: 10px; padding: 2px; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
         '.print-month-day.other-month { background: #f9f9f9; color: #ccc; }' +
-        '.print-month-content { font-size: ' + (mode === 'large' ? '9px' : '10px') + '; line-height: ' + (mode === 'large' ? '1.0' : '1.1') + '; padding: 0 2px; }' +
-        '.print-month-line { border-bottom: 0.1px solid #eee; padding: ' + (mode === 'large' ? '0.5px' : '1px') + ' 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; height: ' + (mode === 'large' ? '4.5mm' : '5.68mm') + '; }' +
+        '.print-month-content { font-size: ' + (mode === 'large' ? '10px' : '10px') + '; line-height: ' + (mode === 'large' ? '1.1' : '1.1') + '; padding: 0 2px; }' +
+        '.print-month-line { border-bottom: 1px solid #999 !important; padding: ' + (mode === 'large' ? '1px' : '1px') + ' 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : '5.68mm') + '; box-sizing: border-box; }' +
         '.print-line-num { min-width: 15px; font-weight: bold; margin-right: 2px; font-size: 8px; color: #000; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
