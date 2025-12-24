@@ -88,9 +88,7 @@ function initializeEventListeners() {
         printWeek();
     });
 
-    document.getElementById('exportMonthPdfBtn').addEventListener('click', function() {
-        exportMonthToPdf();
-    });
+
 
     document.getElementById('printDay').addEventListener('click', function() {
         printDay();
@@ -535,12 +533,12 @@ function showPrintModeSelector() {
         printMonth('normal');
     };
     
-    var largeBtn = document.createElement('button');
-    largeBtn.textContent = '📋 Impressão Grande (17 linhas)';
-    largeBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;';
-    largeBtn.onclick = function() {
+    var pdfBtn = document.createElement('button');
+    pdfBtn.textContent = '📄 Exportar para PDF';
+    pdfBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;';
+    pdfBtn.onclick = function() {
         document.body.removeChild(modal);
-        printMonth('large');
+        exportMonthToPdf();
     };
     
     var cancelBtn = document.createElement('button');
@@ -553,7 +551,7 @@ function showPrintModeSelector() {
     modalContent.appendChild(title);
     modalContent.appendChild(description);
     modalContent.appendChild(normalBtn);
-    modalContent.appendChild(largeBtn);
+    modalContent.appendChild(pdfBtn);
     modalContent.appendChild(cancelBtn);
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
