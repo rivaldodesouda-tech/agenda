@@ -94,7 +94,7 @@ function initializeEventListeners() {
     });
 
     document.getElementById('printMonthBtn').addEventListener('click', function() {
-        printMonth();
+        showPrintModeSelector();
     });
 
     // Fechar edição
@@ -613,7 +613,62 @@ function isHolidayDate(date) {
 
 // ========== IMPRESSÃO ==========
 
-function printMonth() {
+function showPrintModeSelector() {
+    var modal = document.createElement('div');
+    modal.id = 'printModeModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+    
+    var modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px;';
+    
+    var title = document.createElement('h2');
+    title.textContent = 'Modo de Impressão';
+    title.style.cssText = 'margin: 0 0 20px 0; color: #333;';
+    
+    var description = document.createElement('p');
+    description.textContent = 'Escolha o modo de impressão mensal:';
+    description.style.cssText = 'margin: 0 0 20px 0; color: #666;';
+    
+    var normalBtn = document.createElement('button');
+    normalBtn.textContent = '📄 Impressão Normal';
+    normalBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;';
+    normalBtn.onmouseover = function() { this.style.background = '#45a049'; };
+    normalBtn.onmouseout = function() { this.style.background = '#4CAF50'; };
+    normalBtn.onclick = function() {
+        document.body.removeChild(modal);
+        printMonth('normal');
+    };
+    
+    var largeBtn = document.createElement('button');
+    largeBtn.textContent = '📋 Impressão Grande (20 linhas)';
+    largeBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;';
+    largeBtn.onmouseover = function() { this.style.background = '#0b7dda'; };
+    largeBtn.onmouseout = function() { this.style.background = '#2196F3'; };
+    largeBtn.onclick = function() {
+        document.body.removeChild(modal);
+        printMonth('large');
+    };
+    
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = '✕ Cancelar';
+    cancelBtn.style.cssText = 'display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;';
+    cancelBtn.onmouseover = function() { this.style.background = '#da190b'; };
+    cancelBtn.onmouseout = function() { this.style.background = '#f44336'; };
+    cancelBtn.onclick = function() {
+        document.body.removeChild(modal);
+    };
+    
+    modalContent.appendChild(title);
+    modalContent.appendChild(description);
+    modalContent.appendChild(normalBtn);
+    modalContent.appendChild(largeBtn);
+    modalContent.appendChild(cancelBtn);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+}
+
+function printMonth(mode) {
+    mode = mode || 'normal';
     var year = appState.currentDate.getFullYear();
     var month = appState.currentDate.getMonth();
     var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
@@ -634,13 +689,23 @@ function printMonth() {
         var isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
         
         var linesHtml = '';
-        if (dayData && dayData.lines) {
-            linesHtml = dayData.lines.map(function(l, idx) {
-                if (l && l.text && l.text.trim() !== '') {
-                    return '<div class="print-month-line"><span class="print-line-num">' + (idx + 1) + '.</span>' + renderLineWithColors(l) + '</div>';
-                }
-                return '';
-            }).join('');
+        if (mode === 'large') {
+            // Modo Grande: mostrar todas as 20 linhas numeradas
+            for (var lineIdx = 0; lineIdx < 20; lineIdx++) {
+                var line = (dayData && dayData.lines && dayData.lines[lineIdx]) ? dayData.lines[lineIdx] : { text: '', spans: [] };
+                var lineContent = (line && line.text && line.text.trim() !== '') ? renderLineWithColors(line) : '&nbsp;';
+                linesHtml += '<div class="print-month-line"><span class="print-line-num">' + (lineIdx + 1) + '.</span>' + lineContent + '</div>';
+            }
+        } else {
+            // Modo Normal: mostrar apenas linhas com conteúdo
+            if (dayData && dayData.lines) {
+                linesHtml = dayData.lines.map(function(l, idx) {
+                    if (l && l.text && l.text.trim() !== '') {
+                        return '<div class="print-month-line"><span class="print-line-num">' + (idx + 1) + '.</span>' + renderLineWithColors(l) + '</div>';
+                    }
+                    return '';
+                }).join('');
+            }
         }
 
         gridHtml += '<div class="print-month-day' + (isOtherMonth ? ' other-month' : '') + (isSpecial ? ' special' : '') + '">' +
@@ -662,8 +727,8 @@ function printMonth() {
         '.print-month-num { font-weight: bold; font-size: 10px; padding: 2px; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
         '.print-month-day.other-month { background: #f9f9f9; color: #ccc; }' +
-        '.print-month-content { font-size: 10px; line-height: 1.1; padding: 0 2px; }' +
-        '.print-month-line { border-bottom: 0.1px solid #eee; padding: 1px 0; word-break: break-word; display: flex; align-items: flex-start; height: 5.68mm; }' +
+        '.print-month-content { font-size: ' + (mode === 'large' ? '9px' : '10px') + '; line-height: ' + (mode === 'large' ? '1.0' : '1.1') + '; padding: 0 2px; }' +
+        '.print-month-line { border-bottom: 0.1px solid #eee; padding: ' + (mode === 'large' ? '0.5px' : '1px') + ' 0; word-break: break-word; display: flex; align-items: flex-start; height: ' + (mode === 'large' ? '4.5mm' : '5.68mm') + '; }' +
         '.print-line-num { min-width: 15px; font-weight: bold; margin-right: 2px; font-size: 8px; color: #000; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
