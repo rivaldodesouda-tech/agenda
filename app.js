@@ -255,4 +255,3 @@ window.onafterprint = function () { window.close(); };
 
     win.document.close();
 }
-
