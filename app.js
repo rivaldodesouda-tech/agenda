@@ -8,7 +8,8 @@ var COLORS = [
 ];
 
 var FERIADOS_BRASIL = [
-    '01-01', '02-13', '04-21', '05-01', '09-07', '10-12', '11-02', '11-20', '12-25'
+    '01-01', '02-13', '04-21', '05-01',
+    '09-07', '10-12', '11-02', '11-20', '12-25'
 ];
 
 // ========== ESTADO ==========
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function saveDataToStorage() {
     localStorage.setItem('plannerData', JSON.stringify(appState.days));
 }
+
 function loadDataFromStorage() {
     var stored = localStorage.getItem('plannerData');
     if (stored) appState.days = JSON.parse(stored);
@@ -93,10 +95,12 @@ function printMonth() {
     }
 }
 
+// ========== IMPRESSÃO PLOTTER CORRIGIDA ==========
 function printMonthPlotterREAL() {
 
     var year = appState.currentDate.getFullYear();
     var month = appState.currentDate.getMonth();
+
     var monthName = appState.currentDate
         .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
         .toUpperCase();
@@ -110,17 +114,18 @@ function printMonthPlotterREAL() {
     var cells = '';
     var d = new Date(startDate);
 
-    for (let i = 0; i < 42; i++) {
+    for (var i = 0; i < 42; i++) {
 
-        let isOther = d.getMonth() !== month;
-        let isSpecial = d.getDay() === 0 || d.getDay() === 6 || isHolidayDate(d);
+        var isOther = d.getMonth() !== month;
+        var isSpecial = d.getDay() === 0 || d.getDay() === 6 || isHolidayDate(d);
 
-        let lines = '';
+        var lines = '';
         if (!isOther) {
-            for (let l = 0; l < 18; l++) {
+            for (var l = 0; l < 17; l++) { // ✅ 17 LINHAS EXATAS
                 lines += `
                     <div class="line">
-                        <span>${l + 1}.</span>&nbsp;
+                        <span>${l + 1}.</span>
+                        <div class="fill"></div>
                     </div>`;
             }
         }
@@ -139,7 +144,9 @@ function printMonthPlotterREAL() {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=600mm, initial-scale=1.0">
 <title>Plotter</title>
+
 <style>
 
 @page {
@@ -152,33 +159,38 @@ html, body {
     height: 60cm;
     margin: 0;
     padding: 0;
+    background: white;
 }
 
+/* 🔑 ÁREA QUASE TOTAL DO ROLO */
 #calendar {
     position: absolute;
-    left: 2.5cm;
-    top: 2.5cm;
-    width: 55cm;
-    height: 55cm;
+    left: 1cm;
+    top: 1cm;
+    width: 58cm;
+    height: 58cm;
+
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: 1fr;
+    grid-template-rows: 4cm repeat(6, 1fr);
+
     border: 5px solid black;
     box-sizing: border-box;
 }
 
 .header {
     grid-column: span 7;
-    font-size: 2.4cm;
+    font-size: 2.6cm;
     font-weight: bold;
     text-align: center;
-    padding: 0.8cm 0;
+    line-height: 4cm;
     border-bottom: 5px solid black;
 }
 
 .day {
     border-right: 3px solid black;
     border-bottom: 3px solid black;
+    box-sizing: border-box;
 }
 
 .day.special .num {
@@ -186,22 +198,30 @@ html, body {
 }
 
 .num {
-    font-size: 1.6cm;
+    font-size: 1.8cm;
     font-weight: bold;
-    padding: 0.4cm;
+    padding: 0.3cm;
+}
+
+.content {
+    padding: 0.2cm 0.3cm;
 }
 
 .line {
-    height: 0.9cm;
-    border-bottom: 1.5px solid black;
+    height: 0.85cm;
+    border-bottom: 1.4px solid black;
     display: flex;
     align-items: center;
-    font-size: 0.9cm;
+    font-size: 0.85cm;
 }
 
 .line span {
     width: 1.2cm;
     font-weight: bold;
+}
+
+.line .fill {
+    flex: 1;
 }
 
 @media print {
@@ -213,6 +233,7 @@ html, body {
 
 </style>
 </head>
+
 <body>
 
 <div id="calendar">
@@ -223,9 +244,14 @@ html, body {
 <script>
 window.onload = function () {
     document.body.style.zoom = "100%";
-    setTimeout(function(){ window.print(); }, 600);
+    document.documentElement.style.zoom = "100%";
+    setTimeout(function () {
+        window.print();
+    }, 600);
 };
-window.onafterprint = function(){ window.close(); };
+window.onafterprint = function () {
+    window.close();
+};
 </script>
 
 </body>
