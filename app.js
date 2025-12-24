@@ -715,7 +715,7 @@ function printMonthPlotter() {
 
     var firstDay = new Date(year, month, 1);
     var startDate = new Date(firstDay);
-    startDate.setDate(firstDay.getDate() - firstDay.getDay());
+    startDate.setDate(firstDay.getDate() - startDate.getDay());
 
     var gridHtml = '';
     var currentDate = new Date(startDate);
@@ -732,11 +732,9 @@ function printMonthPlotter() {
 
         var linesHtml = '';
 
-        // 🔹 SEMPRE 17 LINHAS FIXAS
         if (!isOtherMonth) {
             for (var lineIdx = 0; lineIdx < 17; lineIdx++) {
                 var line = dayData.lines[lineIdx] || { text: '', spans: [] };
-
                 var content =
                     line.text && line.text.trim() !== ''
                         ? renderLineWithColors(line)
@@ -766,83 +764,57 @@ function printMonthPlotter() {
 
     var html =
         '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
-        '<title>Impressão Larga - ' + monthName + '</title>' +
+        '<title>Calendário 55x55 cm - ' + monthName + '</title>' +
 
         '<style>' +
-        '@page { size: 600mm 600mm; margin: 5mm; }' +
+        /* 📏 Página configurada para 55x55 cm com margens MÍNIMAS */
+        '@page { size: 550mm 550mm; margin: 2mm; }' +
 
-        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }' +
+        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; height: 100vh; width: 100vw; }' +
 
-        '.print-month-header {' +
-            'text-align: center;' +
-            'font-size: 28px;' +
-            'font-weight: bold;' +
-            'margin-bottom: 10px;' +
-        '}' +
-
+        /* 🧱 Grid responsivo para ocupar todo o espaço */
         '.print-month-grid {' +
             'display: grid;' +
             'grid-template-columns: repeat(7, 1fr);' +
-            'border-top: 3px solid #000;' +
-            'border-left: 3px solid #000;' +
+            'width: 100%; height: 100%; border-top: 3px solid #000; border-left: 3px solid #000;' +
         '}' +
 
+        /* Cabeçalhos dos dias */
         '.print-month-day-header {' +
-            'border-right: 3px solid #000;' +
-            'border-bottom: 3px solid #000;' +
-            'text-align: center;' +
-            'font-weight: bold;' +
-            'font-size: 16px;' +
-            'padding: 6px;' +
-            'background: #f0f0f0;' +
+            'border-right: 3px solid #000; border-bottom: 3px solid #000;' +
+            'text-align: center; font-weight: bold; font-size: 22px; padding: 8px; background: #f0f0f0;' +
         '}' +
 
         '.print-month-day {' +
-            'border-right: 3px solid #000;' +
-            'border-bottom: 3px solid #000;' +
-            'position: relative;' +
+            'border-right: 3px solid #000; border-bottom: 3px solid #000;' +
             'overflow: hidden;' +
         '}' +
 
-        '.print-month-day.special {' +
-            'border-color: #FF0000;' +
-        '}' +
-
-        '.print-month-day.other-month {' +
-            'background: #fafafa;' +
-        '}' +
+        '.print-month-day.special { border-color: #FF0000; }' +
+        '.print-month-day.other-month { background: #fafafa; }' +
 
         '.print-month-num {' +
-            'font-weight: bold;' +
-            'font-size: 14px;' +
-            'padding: 4px;' +
+            'font-weight: bold; font-size: 20px;' +
+            'padding: 5px;' +
         '}' +
 
-        '.print-month-day.special .print-month-num {' +
-            'color: #FF0000;' +
-        '}' +
+        '.print-month-day.special .print-month-num { color: #FF0000; }' +
 
         '.print-month-content {' +
-            'font-size: 10px;' +
-            'line-height: 1.1;' +
-            'padding: 0 2px;' +
+            'font-size: 12px; line-height: 1.1; padding: 2px;' +
+            'height: calc((100% - 40px) / 6);' +
         '}' +
 
         '.print-month-line {' +
             'border-bottom: 1.5px solid #000;' +
             'padding: 1px 0;' +
-            'height: 5.2mm;' +   // 🔴 ALTURA CRÍTICA DAS 17 LINHAS
-            'box-sizing: border-box;' +
-            'display: flex;' +
-            'align-items: flex-start;' +
+            'height: 5.2mm;' +
+            'display: flex; align-items: flex-start;' +
         '}' +
 
         '.print-line-num {' +
-            'min-width: 18px;' +
-            'font-weight: bold;' +
-            'font-size: 10px;' +
-            'margin-right: 4px;' +
-            'color: #000;' +
+            'min-width: 18px; font-weight: bold; font-size: 12px;' +
+            'margin-right: 4px; color: #000;' +
         '}' +
 
         '@media print {' +
@@ -852,8 +824,6 @@ function printMonthPlotter() {
 
         '<script>window.onafterprint = function(){ window.close(); };</script>' +
         '</head><body>' +
-
-        '<div class="print-month-header">PLANEJADOR MENSAL — ' + monthName + '</div>' +
 
         '<div class="print-month-grid">' +
             '<div class="print-month-day-header">DOM</div>' +
@@ -875,6 +845,7 @@ function printMonthPlotter() {
         printWindow.print();
     }, 500);
 }
+
 
 function printDay() {
     if (!appState.selectedDay) return;
