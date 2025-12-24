@@ -25,17 +25,43 @@ var appState = {
     savedSelection: null
 };
 
+// ========== DEBUG LOG ==========
+function logToScreen(msg) {
+    var log = document.getElementById('debug-log');
+    if (log) {
+        log.style.display = 'block';
+        log.innerHTML += '<div>' + msg + '</div>';
+    }
+    console.log(msg);
+}
+
+window.onerror = function(msg, url, line) {
+    logToScreen('ERRO: ' + msg + ' em ' + line);
+    return false;
+};
+
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', function() {
-    loadDataFromStorage();
-    initializeEventListeners();
-    
-    // Pequeno atraso para garantir que o DOM esteja pronto no iOS
-    setTimeout(function() {
-        renderWeekView();
-        renderColorPalette();
-        setupGestureHandling();
-    }, 100);
+    try {
+        logToScreen('Iniciando app...');
+        loadDataFromStorage();
+        initializeEventListeners();
+        
+        // Pequeno atraso para garantir que o DOM esteja pronto no iOS
+        setTimeout(function() {
+            try {
+                logToScreen('Renderizando visão semanal...');
+                renderWeekView();
+                renderColorPalette();
+                setupGestureHandling();
+                logToScreen('App pronto.');
+            } catch (e) {
+                logToScreen('Erro na renderização: ' + e.message);
+            }
+        }, 300);
+    } catch (e) {
+        logToScreen('Erro na inicialização: ' + e.message);
+    }
 });
 
 // ========== ARMAZENAMENTO LOCAL ==========

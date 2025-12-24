@@ -20,45 +20,23 @@ html, body {
 
 body {
     overflow-x: hidden;
-    position: fixed;
     width: 100%;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    background-color: #f5f5f5;
 }
 
 /* ========== LAYOUT GERAL ========== */
 #app {
     width: 100%;
-    height: 100%;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    /* Ajuste para Dynamic Island (iPhone 17) */
+    display: block; /* Mudar de flex para block para evitar problemas de altura */
     padding-top: max(44px, env(safe-area-inset-top)); 
     padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
 }
 
 .main-view {
-    -webkit-box-flex: 1;
-    -webkit-flex: 1;
-    flex: 1;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    padding: 0;
-    overflow: hidden;
     width: 100%;
-    height: 100%;
+    display: block;
+    padding: 0;
 }
 
 /* ========== HEADER ========== */
@@ -169,34 +147,18 @@ body {
 
 /* ========== VISÃO SEMANAL (GRID) ========== */
 .week-view-container {
-    -webkit-box-flex: 1;
-    -webkit-flex: 1;
-    flex: 1;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
+    width: 100%;
+    display: block;
+    min-height: 500px;
 }
 
 .week-grid {
-    -webkit-box-flex: 1;
-    -webkit-flex: 1;
-    flex: 1;
     display: -webkit-box !important;
     display: -webkit-flex !important;
     display: flex !important;
-    -webkit-flex-wrap: nowrap !important;
-    flex-wrap: nowrap !important;
-    padding: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    width: 100%;
     background: white;
-    min-height: 200px; /* Garantir altura mínima */
+    min-height: 600px;
 }
 
 .week-column {
