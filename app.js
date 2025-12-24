@@ -231,6 +231,7 @@ function renderWeekView() {
     }
 }
 
+
 // ========== RENDERIZAÇÃO MENSAL ==========
 function renderMonthView() {
     var monthCalendar = document.getElementById('monthCalendar');
