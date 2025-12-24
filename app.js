@@ -709,54 +709,61 @@ function printMonthPlotter() {
     var month = appState.currentDate.getMonth();
     var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
-    var printWindow = window.open('', '', 'width=800,height=600');
+    var printWindow = window.open('', '', 'width=1200,height=800');
     
     var firstDay = new Date(year, month, 1);
-    var lastDay = new Date(year, month + 1, 0);
+    var startDate = new Date(firstDay);
+    startDate.setDate(firstDay.getDate() - firstDay.getDay());
+
+    var gridHtml = '';
+    var currentDate = new Date(startDate);
     
-    var daysHtml = '';
-    var currentDate = new Date(firstDay);
-    
-    while (currentDate <= lastDay) {
+    // Grid de 6 semanas (42 dias) para garantir que cubra todo o mês no formato de calendário
+    for (var i = 0; i < 42; i++) {
         var dateStr = getDateString(currentDate);
         var dayData = appState.days[dateStr] || { lines: [] };
+        var isOtherMonth = currentDate.getMonth() !== month;
         var isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
-        var dayName = getDayName(currentDate.getDay());
         
         var linesHtml = '';
-        for (var i = 0; i < 17; i++) {
-            var line = dayData.lines[i] || { text: '', spans: [] };
-            linesHtml += '<div class="plotter-line"><span class="plotter-line-num">' + (i + 1) + '.</span>' + 
+        // Sempre renderiza 17 linhas
+        for (var j = 0; j < 17; j++) {
+            var line = dayData.lines[j] || { text: '', spans: [] };
+            linesHtml += '<div class="plotter-line"><span class="plotter-line-num">' + (j + 1) + '.</span>' + 
                          '<div class="plotter-line-content">' + renderLineWithColors(line) + '</div></div>';
         }
 
-        daysHtml += '<div class="plotter-day' + (isSpecial ? ' special' : '') + '">' +
-                        '<div class="plotter-day-header">' + dayName + ', ' + currentDate.getDate() + '</div>' +
-                        '<div class="plotter-day-content">' + linesHtml + '</div>' +
+        gridHtml += '<div class="plotter-day' + (isOtherMonth ? ' other-month' : '') + (isSpecial ? ' special' : '') + '">' +
+                        '<div class="plotter-day-num">' + (isOtherMonth ? '' : currentDate.getDate()) + '</div>' +
+                        '<div class="plotter-day-content">' + (isOtherMonth ? '' : linesHtml) + '</div>' +
                     '</div>';
         
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Impressão Plotter - ' + monthName + '</title>' +
+    var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Calendário Plotter - ' + monthName + '</title>' +
         '<style>' +
-        '@page { size: 600mm 5000mm; margin: 0; }' +
-        'body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; background: white; width: 600mm; }' +
-        '.plotter-month-header { text-align: center; font-size: 48px; font-weight: bold; margin-bottom: 30px; border-bottom: 5px solid #000; padding-bottom: 10px; }' +
-        '.plotter-container { display: flex; flex-direction: column; width: 100%; }' +
-        '.plotter-day { border: 2px solid #000; margin-bottom: 15px; page-break-inside: avoid; display: flex; flex-direction: column; }' +
-        '.plotter-day.special { border-color: #FF0000; }' +
-        '.plotter-day-header { background: #eee; padding: 10px 20px; font-size: 32px; font-weight: bold; border-bottom: 2px solid #000; }' +
-        '.plotter-day.special .plotter-day-header { background: #ffe0e0; color: #FF0000; border-bottom-color: #FF0000; }' +
-        '.plotter-day-content { padding: 10px 20px; display: flex; flex-direction: column; }' +
-        '.plotter-line { display: flex; align-items: flex-start; border-bottom: 1px solid #eee; padding: 8px 0; min-height: 45px; }' +
+        '@page { size: landscape; margin: 5mm; }' +
+        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }' +
+        '.plotter-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }' +
+        '.plotter-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 2px solid #000; border-left: 2px solid #000; width: 100%; height: calc(100vh - 60px); }' +
+        '.plotter-day-header { border-right: 2px solid #000; border-bottom: 2px solid #000; text-align: center; font-weight: bold; font-size: 14px; padding: 5px; background: #f0f0f0; }' +
+        '.plotter-day { border-right: 2px solid #000; border-bottom: 2px solid #000; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }' +
+        '.plotter-day-num { font-weight: bold; font-size: 16px; padding: 2px 5px; border-bottom: 1px solid #eee; }' +
+        '.plotter-day.special .plotter-day-num { color: #FF0000; }' +
+        '.plotter-day.other-month { background: #fafafa; }' +
+        '.plotter-day-content { flex: 1; display: flex; flex-direction: column; padding: 2px; overflow: hidden; }' +
+        '.plotter-line { display: flex; align-items: center; border-bottom: 0.5px solid #eee; height: 5.8%; min-height: 0; }' +
         '.plotter-line:last-child { border-bottom: none; }' +
-        '.plotter-line-num { min-width: 60px; font-weight: bold; font-size: 24px; color: #888; }' +
-        '.plotter-line-content { flex: 1; font-size: 28px; line-height: 1.2; word-break: break-word; }' +
+        '.plotter-line-num { min-width: 15px; font-weight: bold; font-size: 8px; color: #999; margin-right: 2px; }' +
+        '.plotter-line-content { flex: 1; font-size: 9px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
-        '<div class="plotter-month-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
-        '<div class="plotter-container">' + daysHtml + '</div></body></html>';
+        '<div class="plotter-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
+        '<div class="plotter-grid">' +
+        '<div class="plotter-day-header">DOM</div><div class="plotter-day-header">SEG</div><div class="plotter-day-header">TER</div>' +
+        '<div class="plotter-day-header">QUA</div><div class="plotter-day-header">QUI</div><div class="plotter-day-header">SEX</div><div class="plotter-day-header">SAB</div>' +
+        gridHtml + '</div></body></html>';
 
     printWindow.document.write(html);
     printWindow.document.close();
