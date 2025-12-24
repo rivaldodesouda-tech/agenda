@@ -623,8 +623,8 @@ function printMonth(mode) {
         '.print-month-grid { display: block; width: 100%; border-top: 1px solid #000; border-left: 1px solid #000; overflow: hidden; }' +
         '.print-month-day-header { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; background: #eee; box-sizing: border-box; }' +
         '.print-month-day { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; height: ' + (mode === 'large' ? '96.67mm' : '2.8cm') + '; position: relative; overflow: hidden; box-sizing: border-box; }' +
-        '.print-month-num { font-weight: bold; font-size: 14px !important; padding: 4px; color: #000 !important; }' +
-        '.print-month-day.special .print-month-num { color: #FF0000; }' +
+        '.print-month-num { font-weight: bold; font-size: 22px !important; padding: 4px 10px; color: #000 !important; background-color: #FFFF00 !important; display: inline-block; border-radius: 4px; margin: 2px; -webkit-print-color-adjust: exact; }' +
+        '.print-month-day.special .print-month-num { color: #FF0000 !important; }' +
         '.print-month-day.other-month { background: none !important; border: none !important; visibility: hidden !important; }' +
         '.print-month-content { font-size: ' + (mode === 'large' ? '10px' : '6px') + '; line-height: 1.1; padding: 0 2px; }' +
         '.print-month-line { border-bottom: ' + (mode === 'large' ? '1.5px solid #000' : '0.1px solid #eee') + ' !important; padding: 1px 0; word-break: break-word; display: flex; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : 'auto') + '; box-sizing: border-box; }' +
