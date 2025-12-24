@@ -337,26 +337,22 @@ function createMonthDayCell(date) {
     for (var i = 0; i < 30; i++) {
         var line = dayData.lines[i] || { text: '', spans: [] };
         
-        var lineWrapper = document.createElement('div');
-        lineWrapper.className = 'month-line-wrapper';
-
-        var lineNum = document.createElement('div');
-        lineNum.className = 'month-line-number';
-        lineNum.textContent = (i + 1) + '.';
-
-        var lineDiv = document.createElement('div');
-        lineDiv.className = 'month-line-content';
-        
         if (line && line.text && line.text.trim() !== '') {
+            var lineWrapper = document.createElement('div');
+            lineWrapper.className = 'month-line-wrapper';
+
+            var lineNum = document.createElement('div');
+            lineNum.className = 'month-line-number';
+            lineNum.textContent = (i + 1) + '.';
+
+            var lineDiv = document.createElement('div');
+            lineDiv.className = 'month-line-content';
             lineDiv.innerHTML = renderLineWithColors(line);
-        } else {
-            lineDiv.classList.add('empty');
-            lineDiv.innerHTML = '&nbsp;';
+            
+            lineWrapper.appendChild(lineNum);
+            lineWrapper.appendChild(lineDiv);
+            notesContainer.appendChild(lineWrapper);
         }
-        
-        lineWrapper.appendChild(lineNum);
-        lineWrapper.appendChild(lineDiv);
-        notesContainer.appendChild(lineWrapper);
     }
     
     cell.appendChild(notesContainer);

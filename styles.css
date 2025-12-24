@@ -350,7 +350,7 @@ body {
 
 .month-day-cell {
     width: 14.28%;
-    height: 180px; /* Aumentado para caber mais linhas */
+    height: 120px; /* Reduzido pois agora só mostra linhas com conteúdo */
     border: 1px solid #e2e8f0;
     padding: 2px;
     cursor: pointer;
