@@ -704,147 +704,163 @@ function printMonthA4() {
     setTimeout(function() { printWindow.print(); }, 500);
 }
 
-function printMonthPlotter() {
+function printMonthPlotterREAL() {
+
     var year = appState.currentDate.getFullYear();
     var month = appState.currentDate.getMonth();
     var monthName = appState.currentDate
         .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
         .toUpperCase();
 
-    var printWindow = window.open('', '', 'width=1200,height=800');
+    var win = window.open('', '_blank');
 
     var firstDay = new Date(year, month, 1);
     var startDate = new Date(firstDay);
     startDate.setDate(firstDay.getDate() - startDate.getDay());
 
-    var gridHtml = '';
-    var currentDate = new Date(startDate);
+    var cells = '';
+    var d = new Date(startDate);
 
-    for (var i = 0; i < 42; i++) {
-        var dateStr = getDateString(currentDate);
-        var dayData = appState.days[dateStr] || { lines: [] };
+    for (let i = 0; i < 42; i++) {
+        let isOther = d.getMonth() !== month;
+        let isSpecial = d.getDay() === 0 || d.getDay() === 6 || isHolidayDate(d);
+        let dateStr = getDateString(d);
+        let dayData = appState.days[dateStr] || { lines: [] };
 
-        var isOtherMonth = currentDate.getMonth() !== month;
-        var isSpecial =
-            currentDate.getDay() === 0 ||
-            currentDate.getDay() === 6 ||
-            isHolidayDate(currentDate);
-
-        var linesHtml = '';
-
-        if (!isOtherMonth) {
-            for (var lineIdx = 0; lineIdx < 17; lineIdx++) {
-                var line = dayData.lines[lineIdx] || { text: '', spans: [] };
-                var content =
-                    line.text && line.text.trim() !== ''
-                        ? renderLineWithColors(line)
-                        : '&nbsp;';
-
-                linesHtml +=
-                    '<div class="print-month-line">' +
-                        '<span class="print-line-num">' + (lineIdx + 1) + '.</span>' +
-                        content +
-                    '</div>';
+        let lines = '';
+        if (!isOther) {
+            for (let l = 0; l < 17; l++) {
+                let line = dayData.lines[l] || {};
+                lines += `
+                    <div class="line">
+                        <span>${l + 1}.</span>
+                        ${line.html || '&nbsp;'}
+                    </div>`;
             }
         }
 
-        gridHtml +=
-            '<div class="print-month-day' +
-                (isOtherMonth ? ' other-month' : '') +
-                (isSpecial ? ' special' : '') +
-            '">' +
-                '<div class="print-month-num">' +
-                    (isOtherMonth ? '' : currentDate.getDate()) +
-                '</div>' +
-                '<div class="print-month-content">' + linesHtml + '</div>' +
-            '</div>';
+        cells += `
+            <div class="day ${isOther ? 'other' : ''} ${isSpecial ? 'special' : ''}">
+                <div class="num">${isOther ? '' : d.getDate()}</div>
+                <div class="content">${lines}</div>
+            </div>`;
 
-        currentDate.setDate(currentDate.getDate() + 1);
+        d.setDate(d.getDate() + 1);
     }
 
-    var html =
-        '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
-        '<title>Calendário 55x55 cm - ' + monthName + '</title>' +
+    win.document.write(`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Calendário Plotter</title>
 
-        '<style>' +
-        /* 📏 Página configurada para 55x55 cm com margens MÍNIMAS */
-        '@page { size: 550mm 550mm; margin: 2mm; }' +
+<style>
 
-        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; height: 100vh; width: 100vw; }' +
-
-        /* 🧱 Grid responsivo para ocupar todo o espaço */
-        '.print-month-grid {' +
-            'display: grid;' +
-            'grid-template-columns: repeat(7, 1fr);' +
-            'width: 100%; height: 100%; border-top: 3px solid #000; border-left: 3px solid #000;' +
-        '}' +
-
-        /* Cabeçalhos dos dias */
-        '.print-month-day-header {' +
-            'border-right: 3px solid #000; border-bottom: 3px solid #000;' +
-            'text-align: center; font-weight: bold; font-size: 22px; padding: 8px; background: #f0f0f0;' +
-        '}' +
-
-        '.print-month-day {' +
-            'border-right: 3px solid #000; border-bottom: 3px solid #000;' +
-            'overflow: hidden;' +
-        '}' +
-
-        '.print-month-day.special { border-color: #FF0000; }' +
-        '.print-month-day.other-month { background: #fafafa; }' +
-
-        '.print-month-num {' +
-            'font-weight: bold; font-size: 20px;' +
-            'padding: 5px;' +
-        '}' +
-
-        '.print-month-day.special .print-month-num { color: #FF0000; }' +
-
-        '.print-month-content {' +
-            'font-size: 12px; line-height: 1.1; padding: 2px;' +
-            'height: calc((100% - 40px) / 6);' +
-        '}' +
-
-        '.print-month-line {' +
-            'border-bottom: 1.5px solid #000;' +
-            'padding: 1px 0;' +
-            'height: 5.2mm;' +
-            'display: flex; align-items: flex-start;' +
-        '}' +
-
-        '.print-line-num {' +
-            'min-width: 18px; font-weight: bold; font-size: 12px;' +
-            'margin-right: 4px; color: #000;' +
-        '}' +
-
-        '@media print {' +
-            '* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
-        '}' +
-        '</style>' +
-
-        '<script>window.onafterprint = function(){ window.close(); };</script>' +
-        '</head><body>' +
-
-        '<div class="print-month-grid">' +
-            '<div class="print-month-day-header">DOM</div>' +
-            '<div class="print-month-day-header">SEG</div>' +
-            '<div class="print-month-day-header">TER</div>' +
-            '<div class="print-month-day-header">QUA</div>' +
-            '<div class="print-month-day-header">QUI</div>' +
-            '<div class="print-month-day-header">SEX</div>' +
-            '<div class="print-month-day-header">SAB</div>' +
-            gridHtml +
-        '</div>' +
-
-        '</body></html>';
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-
-    setTimeout(function () {
-        printWindow.print();
-    }, 500);
+/* 🔥 TRUQUE FUNDAMENTAL PARA iOS */
+@page {
+    size: 700mm 700mm;
+    margin: 0;
 }
+
+html, body {
+    width: 700mm;
+    height: 700mm;
+    margin: 0;
+    padding: 0;
+    background: white;
+}
+
+/* ÁREA REAL DO CALENDÁRIO */
+#calendar {
+    position: absolute;
+    left: 75mm;
+    top: 75mm;
+    width: 550mm;
+    height: 550mm;
+
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+
+    border: 4px solid black;
+}
+
+/* CABEÇALHO */
+.header {
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 4px solid black;
+    padding: 6mm 0;
+    grid-column: span 7;
+}
+
+.day {
+    border-right: 3px solid black;
+    border-bottom: 3px solid black;
+    overflow: hidden;
+}
+
+.day.special .num {
+    color: red;
+}
+
+.day.other {
+    background: #f7f7f7;
+}
+
+.num {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 3mm;
+}
+
+.content {
+    padding: 2mm;
+}
+
+.line {
+    display: flex;
+    border-bottom: 1.5px solid black;
+    height: 6mm;
+    font-size: 12px;
+}
+
+.line span {
+    width: 18px;
+    font-weight: bold;
+}
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="calendar">
+    <div class="header">PLANEJADOR MENSAL – ${monthName}</div>
+    ${cells}
+</div>
+
+<script>
+window.onload = () => setTimeout(() => window.print(), 500);
+window.onafterprint = () => window.close();
+</script>
+
+</body>
+</html>
+    `);
+
+    win.document.close();
+}
+
 
 
 function printDay() {
