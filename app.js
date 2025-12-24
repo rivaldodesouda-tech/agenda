@@ -748,45 +748,35 @@ async function exportMonthToPdf() {
         .toUpperCase();
 
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const totalDays = lastDay.getDate();
-
-    // SEG = 0 ... DOM = 6
-    const startOffset = (firstDay.getDay() + 6) % 7;
-    const totalCells = startOffset + totalDays;
-    const totalWeeks = Math.ceil(totalCells / 7);
+    const startDate = new Date(firstDay);
+    startDate.setDate(firstDay.getDate() - firstDay.getDay()); // DOM → SAB
 
     const tempDiv = document.createElement('div');
     tempDiv.style.width = '297mm';
-    tempDiv.style.padding = '20px';
+    tempDiv.style.padding = '10mm';
     tempDiv.style.background = '#fff';
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
     tempDiv.style.fontFamily = 'Arial, sans-serif';
 
-    let currentDay = 1;
-    let weeksHtml = '';
+    let gridHtml = '';
+    let currentDate = new Date(startDate);
 
-    for (let week = 0; week < totalWeeks; week++) {
-        let weekHtml = '';
+    // === 6 semanas × 7 dias (padrão de calendário real)
+    for (let i = 0; i < 42; i++) {
+        const isOtherMonth = currentDate.getMonth() !== month;
 
-        for (let dow = 0; dow < 7; dow++) {
-            const cellIndex = week * 7 + dow;
-
-            if (cellIndex < startOffset || currentDay > totalDays) {
-                weekHtml += emptyCell();
-                continue;
-            }
-
-            const date = new Date(year, month, currentDay);
-            const dateStr = getDateString(date);
+        if (!isOtherMonth) {
+            const dateStr = getDateString(currentDate);
             const dayData = appState.days[dateStr];
-            const jsDay = date.getDay();
-            const isSpecial = jsDay === 0 || jsDay === 6 || isHolidayDate(date);
+            const isSpecial =
+                currentDate.getDay() === 0 ||
+                currentDate.getDay() === 6 ||
+                isHolidayDate(currentDate);
 
             let linesHtml = '';
-            for (let i = 0; i < 17; i++) {
-                const line = dayData?.lines?.[i];
+            for (let l = 0; l < 17; l++) {
+                const line = dayData?.lines?.[l];
                 const content =
                     line && (line.text || line.html)
                         ? renderLineWithColors(line)
@@ -796,82 +786,98 @@ async function exportMonthToPdf() {
                     <div style="
                         display:flex;
                         border-bottom:1px solid #e0e0e0;
-                        font-size:11px;
-                        height:18px;
+                        font-size:10px;
+                        height:16px;
+                        overflow:hidden;
                     ">
                         <span style="
-                            min-width:22px;
-                            font-size:10px;
+                            min-width:20px;
+                            font-size:9px;
                             color:#999;
                             font-weight:bold;
-                        ">${i + 1}.</span>
+                        ">${l + 1}.</span>
                         <div style="flex:1;">${content}</div>
                     </div>
                 `;
             }
 
-            weekHtml += `
+            gridHtml += `
                 <div style="
+                    float:left;
+                    width:14.2857%;
+                    height:180mm;
                     border:1px solid #000;
+                    box-sizing:border-box;
                     background:${isSpecial ? '#fff5f5' : '#fff'};
-                    min-height:360px;
                 ">
                     <div style="
-                        text-align:center;
                         font-weight:bold;
-                        padding:6px;
+                        padding:4px 8px;
                         background:${isSpecial ? '#c41e3a' : '#f0f0f0'};
                         color:${isSpecial ? '#fff' : '#000'};
                         border-bottom:1px solid #000;
                     ">
-                        ${currentDay}
+                        ${currentDate.getDate()}
                     </div>
-                    <div style="padding:5px;">
+                    <div style="padding:4px;">
                         ${linesHtml}
                     </div>
                 </div>
             `;
-
-            currentDay++;
+        } else {
+            // célula invisível (mantém a grade perfeita)
+            gridHtml += `
+                <div style="
+                    float:left;
+                    width:14.2857%;
+                    height:180mm;
+                    visibility:hidden;
+                "></div>
+            `;
         }
 
-        weeksHtml += `
-            <div style="
-                display:grid;
-                grid-template-columns:repeat(7, 1fr);
-            ">
-                ${weekHtml}
-            </div>
-        `;
+        currentDate.setDate(currentDate.getDate() + 1);
     }
 
     tempDiv.innerHTML = `
         <h1 style="
             text-align:center;
-            margin-bottom:20px;
-            font-size:36px;
+            margin-bottom:10mm;
+            font-size:28px;
             color:#c41e3a;
         ">AGENDA MENSAL – ${monthName}</h1>
 
-        <div style="
-            display:grid;
-            grid-template-columns:repeat(7,1fr);
-            background:#eaeaea;
-            border:1px solid #000;
-        ">
-            ${['SEG','TER','QUA','QUI','SEX','SAB','DOM']
-                .map(d => `<div style="padding:10px;text-align:center;font-weight:bold;border-right:1px solid #000">${d}</div>`)
-                .join('')}
-        </div>
+        <div style="overflow:hidden;">
+            <div style="
+                display:flex;
+                border:1px solid #000;
+                border-bottom:none;
+                background:#eaeaea;
+            ">
+                ${['DOM','SEG','TER','QUA','QUI','SEX','SAB']
+                    .map(d => `
+                        <div style="
+                            width:14.2857%;
+                            text-align:center;
+                            font-weight:bold;
+                            padding:6px;
+                            border-right:1px solid #000;
+                        ">${d}</div>
+                    `).join('')}
+            </div>
 
-        ${weeksHtml}
+            ${gridHtml}
+
+            <div style="clear:both;"></div>
+        </div>
     `;
 
     document.body.appendChild(tempDiv);
 
     const canvas = await html2canvas(tempDiv, {
         scale: 2,
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        useCORS: true
     });
 
     const pdf = new jsPDF({
@@ -884,14 +890,4 @@ async function exportMonthToPdf() {
     pdf.save(`agenda-${monthName.replace(/\s+/g, '-')}.pdf`);
 
     document.body.removeChild(tempDiv);
-
-    function emptyCell() {
-        return `
-            <div style="
-                border:1px solid #000;
-                background:#fff;
-                min-height:360px;
-            "></div>
-        `;
-    }
 }
