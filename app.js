@@ -718,7 +718,6 @@ function printMonthPlotter() {
     var gridHtml = '';
     var currentDate = new Date(startDate);
     
-    // Grid de 6 semanas (42 dias) para garantir que cubra todo o mês no formato de calendário
     for (var i = 0; i < 42; i++) {
         var dateStr = getDateString(currentDate);
         var dayData = appState.days[dateStr] || { lines: [] };
@@ -726,16 +725,18 @@ function printMonthPlotter() {
         var isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
         
         var linesHtml = '';
-        // Sempre renderiza 17 linhas
-        for (var j = 0; j < 17; j++) {
-            var line = dayData.lines[j] || { text: '', spans: [] };
-            linesHtml += '<div class="plotter-line"><span class="plotter-line-num">' + (j + 1) + '.</span>' + 
-                         '<div class="plotter-line-content">' + renderLineWithColors(line) + '</div></div>';
+        // Sempre renderiza 17 linhas para dias do mês vigente
+        if (!isOtherMonth) {
+            for (var j = 0; j < 17; j++) {
+                var line = dayData.lines[j] || { text: '', spans: [] };
+                linesHtml += '<div class="plotter-line"><span class="plotter-line-num">' + (j + 1) + '.</span>' + 
+                             '<div class="plotter-line-content">' + renderLineWithColors(line) + '</div></div>';
+            }
         }
 
         gridHtml += '<div class="plotter-day' + (isOtherMonth ? ' other-month' : '') + (isSpecial ? ' special' : '') + '">' +
                         '<div class="plotter-day-num">' + (isOtherMonth ? '' : currentDate.getDate()) + '</div>' +
-                        '<div class="plotter-day-content">' + (isOtherMonth ? '' : linesHtml) + '</div>' +
+                        '<div class="plotter-day-content">' + linesHtml + '</div>' +
                     '</div>';
         
         currentDate.setDate(currentDate.getDate() + 1);
@@ -748,7 +749,9 @@ function printMonthPlotter() {
         '.plotter-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }' +
         '.plotter-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 2px solid #000; border-left: 2px solid #000; width: 100%; height: calc(100vh - 60px); }' +
         '.plotter-day-header { border-right: 2px solid #000; border-bottom: 2px solid #000; text-align: center; font-weight: bold; font-size: 14px; padding: 5px; background: #f0f0f0; }' +
+        '.plotter-day-header.special { color: #FF0000; }' +
         '.plotter-day { border-right: 2px solid #000; border-bottom: 2px solid #000; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }' +
+        '.plotter-day.special { border-color: #FF0000; }' +
         '.plotter-day-num { font-weight: bold; font-size: 16px; padding: 2px 5px; border-bottom: 1px solid #eee; }' +
         '.plotter-day.special .plotter-day-num { color: #FF0000; }' +
         '.plotter-day.other-month { background: #fafafa; }' +
@@ -761,8 +764,8 @@ function printMonthPlotter() {
         '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
         '<div class="plotter-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
         '<div class="plotter-grid">' +
-        '<div class="plotter-day-header">DOM</div><div class="plotter-day-header">SEG</div><div class="plotter-day-header">TER</div>' +
-        '<div class="plotter-day-header">QUA</div><div class="plotter-day-header">QUI</div><div class="plotter-day-header">SEX</div><div class="plotter-day-header">SAB</div>' +
+        '<div class="plotter-day-header special">DOM</div><div class="plotter-day-header">SEG</div><div class="plotter-day-header">TER</div>' +
+        '<div class="plotter-day-header">QUA</div><div class="plotter-day-header">QUI</div><div class="plotter-day-header">SEX</div><div class="plotter-day-header special">SAB</div>' +
         gridHtml + '</div></body></html>';
 
     printWindow.document.write(html);
