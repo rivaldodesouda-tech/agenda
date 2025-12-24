@@ -745,21 +745,21 @@ function printMonthPlotter() {
     var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Calendário Plotter - ' + monthName + '</title>' +
         '<style>' +
         '@page { size: landscape; margin: 5mm; }' +
-        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }' +
-        '.plotter-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }' +
-        '.plotter-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 2px solid #000; border-left: 2px solid #000; width: 100%; height: calc(100vh - 60px); }' +
-        '.plotter-day-header { border-right: 2px solid #000; border-bottom: 2px solid #000; text-align: center; font-weight: bold; font-size: 14px; padding: 5px; background: #f0f0f0; }' +
+        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; width: 100%; height: 100vh; }' +
+        '.plotter-header { text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }' +
+        '.plotter-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 3px solid #000; border-left: 3px solid #000; width: calc(100% - 10mm); height: 580mm; margin: 0 auto; }' +
+        '.plotter-day-header { border-right: 3px solid #000; border-bottom: 3px solid #000; text-align: center; font-weight: bold; font-size: 20px; padding: 10px; background: #f0f0f0; }' +
         '.plotter-day-header.special { color: #FF0000; }' +
-        '.plotter-day { border-right: 2px solid #000; border-bottom: 2px solid #000; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }' +
+        '.plotter-day { border-right: 3px solid #000; border-bottom: 3px solid #000; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }' +
         '.plotter-day.special { border-color: #FF0000; }' +
-        '.plotter-day-num { font-weight: bold; font-size: 16px; padding: 2px 5px; border-bottom: 1px solid #eee; }' +
+        '.plotter-day-num { font-weight: bold; font-size: 24px; padding: 5px 10px; border-bottom: 1px solid #eee; }' +
         '.plotter-day.special .plotter-day-num { color: #FF0000; }' +
         '.plotter-day.other-month { background: #fafafa; }' +
-        '.plotter-day-content { flex: 1; display: flex; flex-direction: column; padding: 2px; overflow: hidden; }' +
-        '.plotter-line { display: flex; align-items: center; border-bottom: 0.5px solid #eee; height: 5.8%; min-height: 0; }' +
+        '.plotter-day-content { flex: 1; display: flex; flex-direction: column; padding: 5px; overflow: hidden; }' +
+        '.plotter-line { display: flex; align-items: center; border-bottom: 1px solid #eee; height: 5.8%; min-height: 0; }' +
         '.plotter-line:last-child { border-bottom: none; }' +
-        '.plotter-line-num { min-width: 15px; font-weight: bold; font-size: 8px; color: #999; margin-right: 2px; }' +
-        '.plotter-line-content { flex: 1; font-size: 9px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
+        '.plotter-line-num { min-width: 30px; font-weight: bold; font-size: 14px; color: #999; margin-right: 5px; }' +
+        '.plotter-line-content { flex: 1; font-size: 16px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
         '<div class="plotter-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
