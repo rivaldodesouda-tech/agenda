@@ -601,7 +601,8 @@ function printMonth(mode) {
                             '<div class="print-month-content">' + linesHtml + '</div>' +
                         '</div>';
         } else {
-            gridHtml += '<div class="print-month-day other-month" style="border: none !important; background: none !important; visibility: hidden !important;"></div>';
+            // Célula vazia sem bordas para dias de outros meses
+            gridHtml += '<div class="print-month-day other-month" style="border: none !important; background: transparent !important; visibility: hidden !important;"></div>';
         }
         
         currentDate.setDate(currentDate.getDate() + 1);
@@ -609,8 +610,15 @@ function printMonth(mode) {
 
     var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Calendário Mensal - ' + monthName + '</title>' +
         '<style>' +
-        '@page { size: ' + (mode === 'large' ? '600mm 600mm' : 'A4 landscape') + '; margin: 5mm; }' +
-        'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; }' +
+        '@page { size: ' + (mode === 'large' ? '600mm 600mm' : 'A4 landscape') + '; margin: 0; }' +
+        'body { font-family: Arial, sans-serif; margin: 0; padding: 5mm; background: white; -webkit-print-color-adjust: exact; }' +
+        '@media print { ' +
+        '  body { margin: 0; padding: 5mm; } ' +
+        '  .no-print { display: none !important; } ' +
+        '  @page { margin: 0; } ' +
+        '  html, body { height: 100%; margin: 0 !important; padding: 0 !important; overflow: hidden; } ' +
+        '  footer, .footer, #footer { display: none !important; } ' +
+        '} ' +
         '.print-month-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; height: 15mm; }' +
         '.print-month-grid { display: block; width: 100%; border-top: 1px solid #000; border-left: 1px solid #000; overflow: hidden; }' +
         '.print-month-day-header { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; background: #eee; box-sizing: border-box; }' +
