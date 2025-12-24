@@ -653,20 +653,20 @@ function printMonth() {
 
     var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Calendário Mensal - ' + monthName + '</title>' +
         '<style>' +
-        '@page { size: 600mm 600mm; margin: 5mm; }' +
+        '@page { size: A4 landscape; margin: 5mm; }' +
         'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }' +
-        '.print-month-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; height: 15mm; }' +
+        '.print-month-header { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px; }' +
         '.print-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }' +
         '.print-month-day-header { border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; background: #eee; }' +
-        '.print-month-day { border-right: 1px solid #000; border-bottom: 1px solid #000; height: 96.67mm; position: relative; overflow: hidden; }' +
+        '.print-month-day { border-right: 1px solid #000; border-bottom: 1px solid #000; height: 2.8cm; position: relative; overflow: hidden; }' +
         '.print-month-num { font-weight: bold; font-size: 10px; padding: 2px; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
         '.print-month-day.other-month { background: #f9f9f9; color: #ccc; }' +
-        '.print-month-content { font-size: 10px; line-height: 1.1; padding: 0 2px; }' +
-        '.print-month-line { border-bottom: 0.1px solid #eee; padding: 1px 0; word-break: break-word; display: flex; align-items: flex-start; height: 5.68mm; }' +
-        '.print-line-num { min-width: 15px; font-weight: bold; margin-right: 2px; font-size: 8px; color: #000; }' +
+        '.print-month-content { font-size: 6px; line-height: 1.1; padding: 0 2px; }' +
+        '.print-month-line { border-bottom: 0.1px solid #eee; padding: 1px 0; word-break: break-word; display: flex; align-items: flex-start; }' +
+        '.print-line-num { min-width: 12px; font-weight: bold; margin-right: 2px; font-size: 5px; color: #000; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
+        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
         '<div class="print-month-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
         '<div class="print-month-grid">' +
         '<div class="print-month-day-header">DOM</div><div class="print-month-day-header">SEG</div><div class="print-month-day-header">TER</div>' +
@@ -705,7 +705,7 @@ function printDay() {
         '.print-line-num { min-width: 35px; font-weight: bold; font-size: 14px; color: #000; }' +
         '.print-line-content { flex: 1; font-size: 16px; line-height: 1.4; word-break: break-word; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
+        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
         '<div class="print-header"><h1>' + dayName + ', ' + formatDate(date) + '</h1></div>' +
         '<div class="print-lines">' + linesHtml + '</div></body></html>';
 
@@ -768,7 +768,7 @@ function printWeek() {
         '.print-line { border-bottom: 1px solid #eee; padding: 3px 0; font-size: 12px; line-height: 1.2; word-break: break-word; display: flex; align-items: flex-start; }' +
         '.print-line-num { min-width: 25px; font-weight: bold; font-size: 10px; color: #000; margin-right: 5px; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body><div class="week-container-print">' + daysHtml + '</div></body></html>';
+        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body><div class="week-container-print">' + daysHtml + '</div></body></html>';
 
     printWindow.document.write(html);
     printWindow.document.close();
