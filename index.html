@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Planejador">
+    <meta name="theme-color" content="#c41e3a">
+    <meta name="description" content="Planejador de Agenda Interativo">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <title>Planejador de Agenda Interativo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Visão Principal (Semanal/Mensal) -->
+        <div id="mainView" class="main-view">
+            <!-- Header -->
+            <div class="header">
+                <button id="prevNav" class="btn-nav-arrow">‹</button>
+                <div class="header-title">
+                    <h1 id="headerTitle">Dez 2025</h1>
+                </div>
+                <button id="nextNav" class="btn-nav-arrow">›</button>
+            </div>
+
+            <!-- Controles de Visão -->
+            <div class="view-controls">
+                <button id="viewWeekly" class="view-btn active">📅 Semanal</button>
+                <button id="viewMonthly" class="view-btn">📆 Mensal</button>
+                <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
+                <button id="printWeekBtn" class="btn btn-print">🖨️ Imprimir Semana</button>
+            </div>
+
+            <!-- Visão Semanal (Grid) -->
+            <div id="weekView" class="week-view-container">
+                <div id="weekGrid" class="week-grid"></div>
+            </div>
+
+            <!-- Visão Mensal -->
+            <div id="monthView" class="month-view" style="display: none;">
+                <div id="monthCalendar" class="month-calendar"></div>
+            </div>
+        </div>
+
+        <!-- Visão de Edição Diária (Tela Cheia - Caderno) -->
+        <div id="dayEditView" class="day-edit-view" style="display: none;">
+            <div class="edit-header">
+                <div class="edit-header-left">
+                    <span id="editDayInfo" class="edit-day-info"></span>
+                </div>
+                <div class="edit-header-right">
+                    <button id="printDay" class="btn btn-primary">🖨️ Imprimir</button>
+                    <button id="closeDayEdit" class="btn btn-secondary">✕ Fechar</button>
+                </div>
+            </div>
+
+            <div class="edit-content">
+                <div class="color-palette">
+                    <div class="palette-label">Cores:</div>
+                    <div id="colorPalette" class="color-buttons"></div>
+                </div>
+
+                <div class="notebook-container">
+                    <div id="notebookLines" class="notebook-lines" role="textbox" aria-multiline="true"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template para impressão -->
+    <div id="printContainer" style="display: none;"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
