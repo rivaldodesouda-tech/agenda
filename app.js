@@ -228,7 +228,7 @@ function renderMonthView() {
 
     var currentDate = new Date(startDate);
     for (var i = 0; i < 42; i++) {
-        var cell = createMonthDayCell(currentDate);
+        var cell = createMonthDayCell(new Date(currentDate)); // Passa uma cópia da data
         grid.appendChild(cell);
         currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -505,8 +505,7 @@ function applyColorToSelectedText(colorIndex) {
 
     if (!lineData.spans) lineData.spans = [];
     
-    var isBackground = colorIndex >= COLORS.length - 2; // Últimas 2 cores (preto e cinza) são para background
-    lineData.spans.push({ start: start, end: end, color: colorIndex, isBackground: isBackground });
+    lineData.spans.push({ start: start, end: end, color: colorIndex });
     lineData.spans.sort(function(a, b) { return a.start - b.start; });
     
     lineData.spans = lineData.spans.filter(function(s) {
@@ -569,14 +568,8 @@ function renderLineWithColors(lineData) {
         }
         var spanText = lineData.text.substring(span.start, end);
         var color = COLORS[span.color];
-        var style = '';
-        var isBackground = span.isBackground;
-
-        if (isBackground) {
-            style = 'background-color: ' + color + '; color: ' + getContrastColor(color) + ';';
-        } else {
-            style = 'color: ' + color + ';';
-        }
+        // Aplica a cor como background (marca-texto)
+        var style = 'background-color: ' + color + '; color: ' + getContrastColor(color) + ';';
 
         html += '<span style="' + style + ' padding: 1px 3px; border-radius: 2px; display: inline-block;">' + escapeHtml(spanText) + '</span>';
         lastIndex = end;

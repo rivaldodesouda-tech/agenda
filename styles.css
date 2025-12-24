@@ -586,3 +586,111 @@ body {
     background-color: #e2e8f0;
     color: #333;
 }
+
+/* ========== ESTILOS DE IMPRESSÃO ========== */
+@media print {
+    body {
+        /* Remove margens e padding padrão da impressão */
+        margin: 0;
+        padding: 0;
+        /* Garante que o conteúdo caiba na página */
+        width: 100%;
+        height: auto;
+        overflow: visible !important;
+    }
+
+    #app {
+        /* Remove padding de safe-area para impressão */
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    .header, .view-controls, #dayEditView {
+        /* Oculta elementos de navegação e edição */
+        display: none !important;
+    }
+
+    .main-view {
+        /* Garante que a visualização principal seja visível */
+        display: block !important;
+        flex: none !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+
+    /* Redução de fonte para a visualização semanal */
+    .week-grid {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+        height: auto !important;
+        width: 100%;
+    }
+
+    .week-column {
+        flex: 1 1 50% !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+
+    .day-card-grid {
+        /* Ajusta o tamanho do cartão e remove bordas desnecessárias */
+        border: 1px solid #ccc !important;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        page-break-inside: avoid; /* Evita quebra de página dentro do cartão */
+    }
+
+    .day-card-header {
+        font-size: 10px !important; /* Fonte menor para o cabeçalho */
+        padding: 4px 6px !important;
+    }
+
+    .day-card-content {
+        font-size: 8px !important; /* Fonte menor para o conteúdo */
+        max-height: none !important; /* Permite que o conteúdo se expanda */
+        overflow: visible !important;
+        padding: 4px 6px !important;
+    }
+
+    .line-number-preview, .day-line-preview {
+        font-size: 6px !important; /* Fonte ainda menor para as linhas */
+        min-height: 10px !important;
+    }
+
+    /* Redução de fonte para a visualização mensal */
+    .month-view {
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+
+    .month-calendar {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    .month-day-header {
+        font-size: 8px !important;
+        padding: 4px !important;
+    }
+
+    .month-day-cell {
+        height: auto !important; /* Altura automática para caber o conteúdo */
+        min-height: 50px;
+        font-size: 8px !important;
+        padding: 1px !important;
+        page-break-inside: avoid;
+    }
+
+    .month-day-number {
+        font-size: 10px !important;
+        margin-bottom: 1px !important;
+    }
+
+    .month-line-number, .month-line-content {
+        font-size: 6px !important;
+    }
+}
