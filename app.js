@@ -487,7 +487,7 @@ function renderColorPalette() {
 
 function applyColorToSelection() {
     var selection = window.getSelection();
-    if (!selection.rangeCount) return;
+    if (!selection || selection.rangeCount === 0) return;
 
     var range = selection.getRangeAt(0);
     if (range.collapsed) return;
@@ -497,10 +497,7 @@ function applyColorToSelection() {
     // Usar execCommand para compatibilidade e simplicidade
     // Se for preto ou cinza (últimas cores), aplica como background
     if (appState.selectedColor >= COLORS.length - 2) {
-        // No iOS 12, backColor pode não funcionar bem em contentEditable, tentamos hiliteColor também
-        if (!document.execCommand('backColor', false, color)) {
-            document.execCommand('hiliteColor', false, color);
-        }
+        document.execCommand('backColor', false, color);
     } else {
         document.execCommand('foreColor', false, color);
     }
