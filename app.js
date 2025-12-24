@@ -5,7 +5,6 @@ var COLORS = [
     '#FF4500', '#1E90FF', '#DC143C', '#00CED1', '#FFB6C1',
     '#32CD32', '#FF8C00', '#00FF00', '#FF69B4',
     '#000000', '#808080' // Preto e Cinza para background
-
 ];
 
 var FERIADOS_BRASIL = [
@@ -116,7 +115,7 @@ function setupGestureHandling() {
             touchStartY = e.touches[0].clientY;
             isSwiping = true;
         }
-    }, false);
+    }, { passive: true });
 
     weekGrid.addEventListener('touchmove', function(e) {
         if (!isSwiping || e.touches.length !== 1) return;
@@ -127,9 +126,10 @@ function setupGestureHandling() {
         var deltaY = currentY - touchStartY;
         
         if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-            e.preventDefault();
+            // No iOS, preventDefault pode ser necessário para evitar scroll lateral indesejado
+            if (e.cancelable) e.preventDefault();
         }
-    }, true);
+    }, { passive: false });
 
     weekGrid.addEventListener('touchend', function(e) {
         if (!isSwiping) return;
@@ -149,7 +149,7 @@ function setupGestureHandling() {
             }
             renderWeekView();
         }
-    }, false);
+    }, { passive: true });
 }
 
 // ========== RENDERIZAÇÃO SEMANAL ==========
@@ -283,7 +283,7 @@ function createDayCardGrid(date) {
         var lineDiv = document.createElement('div');
         lineDiv.className = 'day-line-preview';
         
-        if (line && line.text && line.text.trim() !== '') {
+        if (line && (line.text || line.html)) {
             lineDiv.innerHTML = renderLineWithColors(line);
         } else {
             lineDiv.classList.add('empty');
@@ -320,7 +320,7 @@ function createMonthDayCell(date) {
     
     if (dayData && dayData.lines) {
         dayData.lines.forEach(function(line, idx) {
-            if (line && line.text && line.text.trim() !== '') {
+            if (line && (line.text || line.html) && (line.text || "").trim() !== '') {
                 html += '<div class="month-line-preview">' + renderLineWithColors(line) + '</div>';
             }
         });
@@ -367,7 +367,10 @@ function openDayEdit(date) {
         lineDiv.contentEditable = true;
         lineDiv.setAttribute('data-index', index);
         
-        if (line && line.text) {
+        // Compatibilidade iOS: garantir que o teclado apareça e o scroll funcione
+        lineDiv.setAttribute('inputmode', 'text');
+        
+        if (line && (line.html || line.text)) {
             lineDiv.innerHTML = line.html || line.text;
         }
 
@@ -377,6 +380,10 @@ function openDayEdit(date) {
 
         lineDiv.addEventListener('focus', function() {
             appState.selectedLineIndex = index;
+            // Scroll suave para a linha em foco no iOS
+            setTimeout(function() {
+                lineDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
         });
 
         lineWrapper.appendChild(lineNum);
@@ -424,23 +431,47 @@ function renderColorPalette() {
             appState.selectedColor = index;
             document.querySelectorAll('.color-btn').forEach(function(b) { b.classList.remove('active'); });
             btn.classList.add('active');
-            applyColorToSelection(color);
+            applyHighlightToSelection(color);
         });
         palette.appendChild(btn);
     });
 }
 
-function applyColorToSelection(color) {
-    if (window.getSelection().rangeCount > 0) {
-        document.execCommand('foreColor', false, color);
-    }
-    
-    if (appState.selectedLineIndex !== null) {
+function applyHighlightToSelection(color) {
+    var selection = window.getSelection();
+    if (selection.rangeCount > 0 && !selection.isCollapsed) {
+        // Usar hiliteColor para o fundo (highlight)
+        // Compatibilidade: hiliteColor funciona melhor no Safari/iOS para background
+        document.execCommand('hiliteColor', false, color);
+        
+        // Garantir que o texto seja visível (preto ou branco dependendo do fundo)
+        // Para simplificar e manter visível, forçamos o texto para preto ou branco
+        var textColor = isDarkColor(color) ? '#FFFFFF' : '#000000';
+        document.execCommand('foreColor', false, textColor);
+    } else if (appState.selectedLineIndex !== null) {
+        // Se não houver seleção, aplica na linha inteira
         var element = document.querySelector('[data-index="' + appState.selectedLineIndex + '"]');
         if (element) {
+            element.style.backgroundColor = color;
+            element.style.color = isDarkColor(color) ? '#FFFFFF' : '#000000';
             updateLineData(appState.selectedLineIndex, element);
         }
     }
+}
+
+// Função auxiliar para verificar se a cor é escura
+function isDarkColor(color) {
+    var r, g, b;
+    if (color.startsWith('#')) {
+        r = parseInt(color.substring(1, 3), 16);
+        g = parseInt(color.substring(3, 5), 16);
+        b = parseInt(color.substring(5, 7), 16);
+    } else {
+        return false;
+    }
+    // Fórmula de luminosidade
+    var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5;
 }
 
 // ========== UTILITÁRIOS ==========
@@ -549,13 +580,13 @@ function printMonth(mode) {
             if (mode === 'large') {
                 for (var lineIdx = 0; lineIdx < 17; lineIdx++) {
                     var line = (dayData && dayData.lines && dayData.lines[lineIdx]) ? dayData.lines[lineIdx] : { text: '', spans: [] };
-                    var lineContent = (line && line.text && line.text.trim() !== '') ? renderLineWithColors(line) : '&nbsp;';
+                    var lineContent = (line && (line.text || line.html) && (line.text || "").trim() !== '') ? renderLineWithColors(line) : '&nbsp;';
                     linesHtml += '<div class="print-month-line"><span class="print-line-num">' + (lineIdx + 1) + '.</span>' + lineContent + '</div>';
                 }
             } else {
                 if (dayData && dayData.lines) {
                     linesHtml = dayData.lines.map(function(l, idx) {
-                        if (l && l.text && l.text.trim() !== '') {
+                        if (l && (l.text || l.html) && (l.text || "").trim() !== '') {
                             return '<div class="print-month-line"><span class="print-line-num">' + (idx + 1) + '.</span>' + renderLineWithColors(l) + '</div>';
                         }
                         return '';
@@ -611,7 +642,7 @@ function printDay() {
 
     var printWindow = window.open('', '', 'width=800,height=600');
     var linesHtml = dayData.lines.map(function(l, idx) {
-        if (l && l.text && l.text.trim() !== '') {
+        if (l && (l.text || l.html) && (l.text || "").trim() !== '') {
             return '<div class="print-line"><span class="print-line-num">' + (idx + 1) + '.</span><div class="print-line-content">' + renderLineWithColors(l) + '</div></div>';
         }
         return '';
@@ -657,7 +688,7 @@ function printWeek() {
         var linesHtml = '';
         if (dayData.lines) {
             linesHtml = dayData.lines.map(function(l, idx) {
-                if (l && l.text && l.text.trim() !== '') {
+                if (l && (l.text || l.html) && (l.text || "").trim() !== '') {
                     return '<div class="print-week-line"><span class="print-line-num">' + (idx + 1) + '.</span>' + renderLineWithColors(l) + '</div>';
                 }
                 return '';
