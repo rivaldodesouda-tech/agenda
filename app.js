@@ -680,6 +680,8 @@ function printMonth() {
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
+    window.focus();
+    renderWeekView();
 }
 
 function printDay() {
@@ -720,6 +722,8 @@ function printDay() {
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
+    window.focus();
+    renderWeekView();
 }
 
 function printWeek() {
@@ -785,4 +789,6 @@ function printWeek() {
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
+    window.focus();
+    renderWeekView();
 }
