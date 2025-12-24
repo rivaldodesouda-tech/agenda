@@ -88,6 +88,10 @@ function initializeEventListeners() {
         printWeek();
     });
 
+    document.getElementById('exportMonthPdfBtn').addEventListener('click', function() {
+        exportMonthToPdf();
+    });
+
     document.getElementById('printDay').addEventListener('click', function() {
         printDay();
     });
@@ -708,27 +712,116 @@ function printWeek() {
         daysHtml += '<div class="print-week-day' + (isSpecial ? ' special' : '') + '">' +
                         '<div class="print-week-header">' + getDayName(date.getDay()) + ' ' + date.getDate() + '</div>' +
                         '<div class="print-week-content">' + linesHtml + '</div>' +
-                    '</div>';
+                        '</div>';
     }
 
     var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Semana - ' + monthName + '</title>' +
         '<style>' +
         '@page { size: A4 landscape; margin: 5mm; }' +
         'body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; }' +
-        '.print-week-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 10px; }' +
-        '.print-week-grid { display: flex; border-top: 1px solid #000; border-left: 1px solid #000; height: 180mm; }' +
-        '.print-week-day { flex: 1; border-right: 1px solid #000; border-bottom: 1px solid #000; position: relative; overflow: hidden; }' +
-        '.print-week-header { background: #eee; padding: 5px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; font-size: 12px; }' +
-        '.print-week-day.special .print-week-header { color: #FF0000; }' +
-        '.print-week-content { padding: 5px; font-size: 10px; }' +
-        '.print-week-line { border-bottom: 0.1px solid #eee; padding: 2px 0; word-break: break-word; display: flex; align-items: flex-start; }' +
-        '.print-line-num { min-width: 20px; font-weight: bold; color: #999; font-size: 8px; }' +
+        '.print-week-header-main { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 10px; }' +
+        '.print-week-grid { display: flex; gap: 5px; height: 180mm; }' +
+        '.print-week-day { flex: 1; border: 1px solid #000; display: flex; flex-direction: column; min-width: 0; }' +
+        '.print-week-header { background: #eee; padding: 5px; text-align: center; font-weight: bold; border-bottom: 1px solid #000; font-size: 12px; }' +
+        '.print-week-content { flex: 1; padding: 5px; font-size: 8px; overflow: hidden; }' +
+        '.print-week-line { border-bottom: 1px solid #eee; padding: 2px 0; word-break: break-word; display: flex; }' +
+        '.print-line-num { min-width: 15px; font-weight: bold; color: #999; margin-right: 5px; }' +
+        '.special .print-week-header { background: #ffcccc; color: #c41e3a; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
         '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
-        '<div class="print-week-title">PLANEJADOR SEMANAL - ' + monthName + '</div>' +
+        '<div class="print-week-header-main">PLANEJADOR SEMANAL - ' + monthName + '</div>' +
         '<div class="print-week-grid">' + daysHtml + '</div></body></html>';
 
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
+}
+
+async function exportMonthToPdf() {
+    const { jsPDF } = window.jspdf;
+    const monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    
+    // Criar um elemento temporário para renderizar o conteúdo do PDF
+    const tempDiv = document.createElement('div');
+    tempDiv.style.width = '1200px';
+    tempDiv.style.padding = '20px';
+    tempDiv.style.background = 'white';
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    
+    const year = appState.currentDate.getFullYear();
+    const month = appState.currentDate.getMonth();
+    
+    let gridHtml = '';
+    const firstDay = new Date(year, month, 1);
+    const startDate = new Date(firstDay);
+    startDate.setDate(firstDay.getDate() - firstDay.getDay());
+    const currentDate = new Date(startDate);
+
+    for (let i = 0; i < 42; i++) {
+        const isOtherMonth = currentDate.getMonth() !== month;
+        if (!isOtherMonth) {
+            const dateStr = getDateString(currentDate);
+            const dayData = appState.days[dateStr];
+            const isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
+            
+            let linesHtml = '';
+            if (dayData && dayData.lines) {
+                linesHtml = dayData.lines.map((l, idx) => {
+                    if (l && (l.text || l.html) && (l.text || "").trim() !== '') {
+                        return `<div style="border-bottom: 1px solid #eee; font-size: 10px; padding: 2px 0; display: flex;">
+                                    <span style="min-width: 20px; font-weight: bold; color: #999;">${idx + 1}.</span>
+                                    <span>${l.text || ''}</span>
+                                </div>`;
+                    }
+                    return '';
+                }).join('');
+            }
+
+            gridHtml += `<div style="width: 14.28%; border: 1px solid #000; min-height: 150px; float: left; box-sizing: border-box; background: ${isSpecial ? '#fff5f5' : 'white'};">
+                            <div style="background: ${isSpecial ? '#c41e3a' : '#f8f9fa'}; color: ${isSpecial ? 'white' : 'black'}; padding: 4px; font-weight: bold; text-align: center; border-bottom: 1px solid #000;">
+                                ${currentDate.getDate()}
+                            </div>
+                            <div style="padding: 4px;">${linesHtml}</div>
+                        </div>`;
+        } else {
+            gridHtml += `<div style="width: 14.28%; min-height: 150px; float: left; box-sizing: border-box; border: 1px solid transparent;"></div>`;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    tempDiv.innerHTML = `
+        <h1 style="text-align: center; color: #c41e3a; margin-bottom: 20px;">Agenda Mensal - ${monthName.toUpperCase()}</h1>
+        <div style="display: flex; background: #f1f5f9; border: 1px solid #000; border-bottom: none;">
+            ${['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'].map(d => `<div style="flex: 1; text-align: center; padding: 8px; font-weight: bold; border-right: 1px solid #000;">${d}</div>`).join('')}
+        </div>
+        <div style="overflow: hidden; border-left: 1px solid #000;">
+            ${gridHtml}
+        </div>
+    `;
+
+    document.body.appendChild(tempDiv);
+
+    try {
+        const canvas = await html2canvas(tempDiv, {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`agenda-${monthName.replace(' ', '-')}.pdf`);
+    } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+        alert('Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.');
+    } finally {
+        document.body.removeChild(tempDiv);
+    }
 }

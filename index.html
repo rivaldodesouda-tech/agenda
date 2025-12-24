@@ -12,6 +12,8 @@
     <meta name="msapplication-tap-highlight" content="no">
     <title>Planejador de Agenda Interativo</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div id="app">
@@ -31,6 +33,7 @@
                 <button id="viewWeekly" class="view-btn active">📅 Semanal</button>
                 <button id="viewMonthly" class="view-btn">📆 Mensal</button>
                 <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
+                <button id="exportMonthPdfBtn" class="btn btn-pdf">📄 Exportar PDF Mensal</button>
                 <button id="printWeekBtn" class="btn btn-print">🖨️ Imprimir Semana</button>
             </div>
 
