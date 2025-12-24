@@ -618,7 +618,11 @@ function printMonth() {
     var month = appState.currentDate.getMonth();
     var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
-    var printWindow = window.open('', '', 'width=800,height=600');
+    var printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+        alert('O bloqueador de pop-ups impediu a abertura da janela de impressão. Por favor, desative-o para este site.');
+        return;
+    }
     
     var firstDay = new Date(year, month, 1);
     var startDate = new Date(firstDay);
@@ -686,7 +690,11 @@ function printDay() {
     var dayName = getDayName(date.getDay());
     var isSpecial = date.getDay() === 0 || date.getDay() === 6 || isHolidayDate(date);
 
-    var printWindow = window.open('', '', 'width=800,height=600');
+    var printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+        alert('O bloqueador de pop-ups impediu a abertura da janela de impressão. Por favor, desative-o para este site.');
+        return;
+    }
     var linesHtml = dayData.lines.map(function(l, idx) {
         if (l && l.text && l.text.trim() !== '') {
             return '<div class="print-line"><span class="print-line-num">' + (idx + 1) + '.</span><div class="print-line-content">' + renderLineWithColors(l) + '</div></div>';
@@ -718,7 +726,11 @@ function printWeek() {
     var startDate = new Date(appState.currentDate);
     startDate.setDate(appState.currentDate.getDate() - appState.currentDate.getDay());
 
-    var printWindow = window.open('', '', 'width=800,height=600');
+    var printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+        alert('O bloqueador de pop-ups impediu a abertura da janela de impressão. Por favor, desative-o para este site.');
+        return;
+    }
     var daysHtml = '';
     var hasAnyContent = false;
 
