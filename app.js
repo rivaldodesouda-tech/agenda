@@ -618,11 +618,7 @@ function printMonth() {
     var month = appState.currentDate.getMonth();
     var monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
-    var printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-        alert('O bloqueador de pop-ups impediu a abertura da janela de impressão. Por favor, desative-o para este site.');
-        return;
-    }
+    var printWindow = window.open('', '', 'width=800,height=600');
     
     var firstDay = new Date(year, month, 1);
     var startDate = new Date(firstDay);
@@ -670,7 +666,7 @@ function printMonth() {
         '.print-month-line { border-bottom: 0.1px solid #eee; padding: 1px 0; word-break: break-word; display: flex; align-items: flex-start; }' +
         '.print-line-num { min-width: 12px; font-weight: bold; margin-right: 2px; font-size: 5px; color: #000; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
+        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
         '<div class="print-month-header">PLANEJADOR MENSAL - ' + monthName + '</div>' +
         '<div class="print-month-grid">' +
         '<div class="print-month-day-header">DOM</div><div class="print-month-day-header">SEG</div><div class="print-month-day-header">TER</div>' +
@@ -680,8 +676,6 @@ function printMonth() {
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
-    window.focus();
-    renderWeekView();
 }
 
 function printDay() {
@@ -692,11 +686,7 @@ function printDay() {
     var dayName = getDayName(date.getDay());
     var isSpecial = date.getDay() === 0 || date.getDay() === 6 || isHolidayDate(date);
 
-    var printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-        alert('O bloqueador de pop-ups impediu a abertura da janela de impressão. Por favor, desative-o para este site.');
-        return;
-    }
+    var printWindow = window.open('', '', 'width=800,height=600');
     var linesHtml = dayData.lines.map(function(l, idx) {
         if (l && l.text && l.text.trim() !== '') {
             return '<div class="print-line"><span class="print-line-num">' + (idx + 1) + '.</span><div class="print-line-content">' + renderLineWithColors(l) + '</div></div>';
@@ -715,26 +705,20 @@ function printDay() {
         '.print-line-num { min-width: 35px; font-weight: bold; font-size: 14px; color: #000; }' +
         '.print-line-content { flex: 1; font-size: 16px; line-height: 1.4; word-break: break-word; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body>' +
+        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body>' +
         '<div class="print-header"><h1>' + dayName + ', ' + formatDate(date) + '</h1></div>' +
         '<div class="print-lines">' + linesHtml + '</div></body></html>';
 
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
-    window.focus();
-    renderWeekView();
 }
 
 function printWeek() {
     var startDate = new Date(appState.currentDate);
     startDate.setDate(appState.currentDate.getDate() - appState.currentDate.getDay());
 
-    var printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-        alert('O bloqueador de pop-ups impediu a abertura da janela de impressão. Por favor, desative-o para este site.');
-        return;
-    }
+    var printWindow = window.open('', '', 'width=800,height=600');
     var daysHtml = '';
     var hasAnyContent = false;
 
@@ -784,11 +768,9 @@ function printWeek() {
         '.print-line { border-bottom: 1px solid #eee; padding: 3px 0; font-size: 12px; line-height: 1.2; word-break: break-word; display: flex; align-items: flex-start; }' +
         '.print-line-num { min-width: 25px; font-weight: bold; font-size: 10px; color: #000; margin-right: 5px; }' +
         '@media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }' +
-        '</style><script>window.onafterprint = function() { window.close(); };</script></head><body><div class="week-container-print">' + daysHtml + '</div></body></html>';
+        '</style><script>window.onafterprint = function() { window.close(); window.opener.focus(); window.opener.renderWeekView(); };</script></head><body><div class="week-container-print">' + daysHtml + '</div></body></html>';
 
     printWindow.document.write(html);
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
-    window.focus();
-    renderWeekView();
 }
