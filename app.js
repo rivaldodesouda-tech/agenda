@@ -494,9 +494,12 @@ function applyColorToSelection() {
     var color = COLORS[appState.selectedColor];
     
     // Usar execCommand para compatibilidade e simplicidade
-    // Se for preto ou cinza (últimas cores), aplica como background
+    // Se for preto ou cinza (últimas cores), aplica como background (highlight)
     if (appState.selectedColor >= COLORS.length - 2) {
-        document.execCommand('backColor', false, color);
+        // Tenta backColor primeiro, se falhar tenta hiliteColor (comum no Safari/iOS)
+        if (!document.execCommand('backColor', false, color)) {
+            document.execCommand('hiliteColor', false, color);
+        }
     } else {
         document.execCommand('foreColor', false, color);
     }
@@ -643,7 +646,7 @@ function printMonth(mode) {
                         '</div>';
         } else {
             // Célula invisível para dias de outros meses - removendo completamente bordas e visibilidade
-            gridHtml += '<div class="print-month-day other-month" style="border: none !important; background: none !important; visibility: hidden !important;"></div>';
+            gridHtml += '<div class="print-month-day other-month" style="border: none !important; background: none !important; visibility: hidden !important; height: 0 !important; width: 0 !important; padding: 0 !important; margin: 0 !important;"></div>';
         }
         
         currentDate.setDate(currentDate.getDate() + 1);
@@ -657,6 +660,7 @@ function printMonth(mode) {
         '.print-month-grid { display: block; width: 100%; border-top: 1px solid #000; border-left: 1px solid #000; overflow: hidden; }' +
         '.print-month-day-header { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; background: #eee; box-sizing: border-box; }' +
         '.print-month-day { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; height: 96.67mm; position: relative; overflow: hidden; box-sizing: border-box; }' +
+        '.print-month-day.other-month { display: none !important; }' +
         '.print-month-num { font-weight: bold; font-size: 14px !important; padding: 4px; color: #000 !important; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
         '.print-month-day.other-month { background: none !important; border: none !important; visibility: hidden !important; }' +
