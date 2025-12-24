@@ -302,27 +302,22 @@ function createDayCardGrid(date) {
     
     for (var i = 0; i < 30; i++) {
         var line = dayData.lines[i] || { text: '', spans: [] };
-        
-        var lineWrapper = document.createElement('div');
-        lineWrapper.className = 'day-line-wrapper';
-
-        var lineNum = document.createElement('div');
-        lineNum.className = 'line-number-preview';
-        lineNum.textContent = (i + 1) + '.';
-
-        var lineDiv = document.createElement('div');
-        lineDiv.className = 'day-line-preview';
-        
-        if (line && line.text && line.text.trim() !== '') {
-            lineDiv.innerHTML = renderLineWithColors(line);
-        } else {
-            lineDiv.classList.add('empty');
-            lineDiv.innerHTML = '&nbsp;';
+        if (line.text && line.text.trim() !== '') {
+            var lineWrapper = document.createElement('div');
+            lineWrapper.className = 'day-line-wrapper';
+            
+            var lineNum = document.createElement('span');
+            lineNum.className = 'line-number-preview';
+            lineNum.textContent = (i + 1) + '.';
+            
+            var linePreview = document.createElement('div');
+            linePreview.className = 'day-line-preview';
+            linePreview.innerHTML = renderLineWithColors(line);
+            
+            lineWrapper.appendChild(lineNum);
+            lineWrapper.appendChild(linePreview);
+            content.appendChild(lineWrapper);
         }
-        
-        lineWrapper.appendChild(lineNum);
-        lineWrapper.appendChild(lineDiv);
-        content.appendChild(lineWrapper);
     }
 
     card.appendChild(header);
@@ -331,61 +326,56 @@ function createDayCardGrid(date) {
     card.addEventListener('click', function() {
         openDayEdit(date);
     });
-    
+
     return card;
 }
 
 function createMonthDayCell(date) {
     var cell = document.createElement('div');
     cell.className = 'month-day-cell';
-
+    
     var dateStr = getDateString(date);
+    var isToday = dateStr === getDateString(new Date());
+    var isOtherMonth = date.getMonth() !== appState.currentDate.getMonth();
     var dayOfWeek = date.getDay();
     var isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     var isHoliday = isHolidayDate(date);
-    var isOtherMonth = date.getMonth() !== appState.currentDate.getMonth();
 
-    if (isOtherMonth) {
-        cell.classList.add('other-month');
-    } else if (isWeekend || isHoliday) {
-        cell.classList.add(isHoliday ? 'holiday' : 'weekend');
-    }
+    if (isToday) cell.classList.add('today');
+    if (isOtherMonth) cell.classList.add('other-month');
+    if (isWeekend) cell.classList.add('weekend');
+    if (isHoliday) cell.classList.add('holiday');
 
     var dayNum = document.createElement('div');
     dayNum.className = 'month-day-number';
     dayNum.textContent = date.getDate();
     cell.appendChild(dayNum);
 
-    var dayData = appState.days[dateStr] || { lines: [] };
-    if (!dayData.lines || dayData.lines.length === 0) {
-        dayData.lines = Array(30).fill(null).map(function() { return { text: '', spans: [] }; });
-    }
-
-    var notesContainer = document.createElement('div');
-    notesContainer.className = 'month-day-notes';
+    var notes = document.createElement('div');
+    notes.className = 'month-day-notes';
     
-    for (var i = 0; i < 30; i++) {
-        var line = dayData.lines[i] || { text: '', spans: [] };
-        
-        if (line && line.text && line.text.trim() !== '') {
-            var lineWrapper = document.createElement('div');
-            lineWrapper.className = 'month-line-wrapper';
-
-            var lineNum = document.createElement('div');
-            lineNum.className = 'month-line-number';
-            lineNum.textContent = (i + 1) + '.';
-
-            var lineDiv = document.createElement('div');
-            lineDiv.className = 'month-line-content';
-            lineDiv.innerHTML = renderLineWithColors(line);
-            
-            lineWrapper.appendChild(lineNum);
-            lineWrapper.appendChild(lineDiv);
-            notesContainer.appendChild(lineWrapper);
-        }
+    var dayData = appState.days[dateStr];
+    if (dayData && dayData.lines) {
+        dayData.lines.forEach(function(line, idx) {
+            if (line && line.text && line.text.trim() !== '') {
+                var lineWrapper = document.createElement('div');
+                lineWrapper.className = 'month-line-wrapper';
+                
+                var lineNum = document.createElement('span');
+                lineNum.className = 'month-line-number';
+                lineNum.textContent = (idx + 1) + '.';
+                
+                var lineContent = document.createElement('div');
+                lineContent.className = 'month-line-content';
+                lineContent.innerHTML = renderLineWithColors(line);
+                
+                lineWrapper.appendChild(lineNum);
+                lineWrapper.appendChild(lineContent);
+                notes.appendChild(lineWrapper);
+            }
+        });
     }
-    
-    cell.appendChild(notesContainer);
+    cell.appendChild(notes);
 
     cell.addEventListener('click', function() {
         openDayEdit(date);
@@ -397,84 +387,66 @@ function createMonthDayCell(date) {
 // ========== EDIÇÃO DIÁRIA ==========
 function openDayEdit(date) {
     appState.selectedDay = getDateString(date);
-    var dayEditView = document.getElementById('dayEditView');
-    var editDayInfo = document.getElementById('editDayInfo');
-    var notebookLines = document.getElementById('notebookLines');
-
-    var dayName = getDayName(date.getDay());
-    editDayInfo.textContent = dayName + ', ' + formatDate(date);
+    var dayData = appState.days[appState.selectedDay] || { lines: [] };
     
-    if (!appState.days[appState.selectedDay]) {
-        appState.days[appState.selectedDay] = {
-            lines: Array(30).fill(null).map(function() { return { text: '', spans: [] }; })
-        };
+    // Inicializar 30 linhas se não existirem
+    if (!dayData.lines || dayData.lines.length === 0) {
+        dayData.lines = Array(30).fill(null).map(function() { return { text: '', spans: [] }; });
     }
+
+    var info = document.getElementById('editDayInfo');
+    info.textContent = getDayName(date.getDay()) + ', ' + formatDate(date);
     
-    var dayData = appState.days[appState.selectedDay];
-    notebookLines.innerHTML = '';
+    var container = document.getElementById('notebookLines');
+    container.innerHTML = '';
 
-    for (var i = 0; i < 30; i++) {
-        (function(index) {
-            var lineData = dayData.lines[index] || { text: '', spans: [] };
-            var lineWrapper = document.createElement('div');
-            lineWrapper.className = 'notebook-line-wrapper';
+    dayData.lines.forEach(function(line, index) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'notebook-line-wrapper';
+        
+        var num = document.createElement('div');
+        num.className = 'line-number';
+        num.textContent = (index + 1);
+        
+        var editable = document.createElement('div');
+        editable.className = 'notebook-line-editable';
+        editable.contentEditable = true;
+        editable.setAttribute('data-index', index);
+        
+        updateEditableContent(editable, line);
 
-            var lineNum = document.createElement('div');
-            lineNum.className = 'line-number';
-            lineNum.textContent = index + 1;
-
-            var lineEditable = document.createElement('div');
-            lineEditable.className = 'notebook-line-editable';
-            lineEditable.contentEditable = true;
-            lineEditable.setAttribute('data-index', index);
-            
-            updateEditableContent(lineEditable, lineData);
-
-            lineEditable.addEventListener('input', function(e) {
-                lineData.text = lineEditable.textContent;
-                if (lineData.spans) {
-                    lineData.spans = lineData.spans.filter(function(span) { return span.start < lineData.text.length; });
-                    lineData.spans.forEach(function(span) {
-                        if (span.end > lineData.text.length) span.end = lineData.text.length;
+        editable.addEventListener('input', function() {
+            var text = this.innerText;
+            // Se o texto mudou, precisamos ajustar os spans
+            if (text !== dayData.lines[index].text) {
+                dayData.lines[index].text = text;
+                // Ajuste simples: se o texto encurtou, remove spans que ficaram fora
+                if (dayData.lines[index].spans) {
+                    dayData.lines[index].spans = dayData.lines[index].spans.filter(function(s) {
+                        return s.start < text.length;
+                    }).map(function(s) {
+                        return { start: s.start, end: Math.min(s.end, text.length), color: s.color };
                     });
                 }
                 saveDataToStorage();
-            });
+            }
+        });
 
-            lineEditable.addEventListener('focus', function() {
-                appState.selectedLineIndex = index;
-            });
+        editable.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var next = wrapper.nextElementSibling;
+                if (next) next.querySelector('.notebook-line-editable').focus();
+            }
+        });
 
-            // Tratar Tab e Enter para mudar de linha
-            lineEditable.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === 'Tab') {
-                    e.preventDefault();
-                    var nextIndex = index + 1;
-                    if (nextIndex < 30) {
-                        var nextLine = notebookLines.querySelector('[data-index="' + nextIndex + '"]');
-                        if (nextLine) {
-                            nextLine.focus();
-                            // Colocar o cursor no final do texto se houver
-                            var range = document.createRange();
-                            var sel = window.getSelection();
-                            range.selectNodeContents(nextLine);
-                            range.collapse(false);
-                            sel.removeAllRanges();
-                            sel.addRange(range);
-                        }
-                    }
-                }
-            });
+        wrapper.appendChild(num);
+        wrapper.appendChild(editable);
+        container.appendChild(wrapper);
+    });
 
-            lineWrapper.appendChild(lineNum);
-            lineWrapper.appendChild(lineEditable);
-            notebookLines.appendChild(lineWrapper);
-        })(i);
-    }
-
-    dayEditView.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    renderColorPalette();
+    document.getElementById('mainView').style.display = 'none';
+    document.getElementById('dayEditView').style.display = 'flex';
 }
 
 function updateEditableContent(element, lineData) {
@@ -482,22 +454,16 @@ function updateEditableContent(element, lineData) {
 }
 
 function closeDayEdit() {
-    saveDataToStorage();
     document.getElementById('dayEditView').style.display = 'none';
-    document.body.style.overflow = '';
-    
-    if (appState.view === 'week') {
-        renderWeekView();
-    } else {
-        renderMonthView();
-    }
+    document.getElementById('mainView').style.display = 'block';
+    if (appState.view === 'week') renderWeekView();
+    else renderMonthView();
 }
 
-// ========== PALETA DE CORES ==========
 function renderColorPalette() {
     var palette = document.getElementById('colorPalette');
     palette.innerHTML = '';
-
+    
     COLORS.forEach(function(color, index) {
         var btn = document.createElement('button');
         btn.className = 'color-btn';
