@@ -754,12 +754,15 @@ async function exportMonthToPdf() {
     const startDate = new Date(firstDay);
     
     // Ajustar para começar na Segunda-feira (1)
+    // Se o primeiro dia do mês for Domingo (0), diff será -1, então recuamos 6 dias para chegar na Segunda anterior.
+    // Se for Segunda (1), diff será 0.
     let diff = firstDay.getDay() - 1;
     if (diff === -1) diff = 6; 
     startDate.setDate(firstDay.getDate() - diff);
     
     const currentDate = new Date(startDate);
 
+    // O loop de 42 dias (6 semanas) garante que a estrutura de 7 colunas (Seg-Dom) seja mantida.
     for (let i = 0; i < 42; i++) {
         const isOtherMonth = currentDate.getMonth() !== month;
         
