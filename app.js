@@ -427,7 +427,7 @@ function updateLineData(index, element) {
     var text = element.innerText;
     var spans = [];
     
-    // Capturar cores dos spans
+    // Capturar cores e backgrounds dos spans
     var childNodes = element.childNodes;
     var currentPos = 0;
     
@@ -439,7 +439,8 @@ function updateLineData(index, element) {
             spans.push({
                 start: currentPos,
                 end: currentPos + nodeText.length,
-                color: node.style.color
+                color: node.style.color,
+                backgroundColor: node.style.backgroundColor
             });
         }
         currentPos += nodeText.length;
@@ -494,7 +495,12 @@ function applyColorToSelection() {
     var color = COLORS[appState.selectedColor];
     
     // Usar execCommand para compatibilidade e simplicidade
-    document.execCommand('foreColor', false, color);
+    // Se for preto ou cinza (últimas cores), aplica como background
+    if (appState.selectedColor >= COLORS.length - 2) {
+        document.execCommand('backColor', false, color);
+    } else {
+        document.execCommand('foreColor', false, color);
+    }
     
     // Forçar atualização do estado
     if (appState.selectedLineIndex !== null) {
@@ -537,8 +543,12 @@ function renderLineWithColors(lineData) {
     sortedSpans.forEach(function(span) {
         // Texto antes do span
         result += lineData.text.substring(lastPos, span.start);
-        // Texto colorido
-        result += '<span style="color: ' + span.color + '">' + 
+        // Texto colorido e com background
+        var style = '';
+        if (span.color) style += 'color: ' + span.color + ';';
+        if (span.backgroundColor) style += 'background-color: ' + span.backgroundColor + ';';
+        
+        result += '<span style="' + style + '">' + 
                   lineData.text.substring(span.start, span.end) + '</span>';
         lastPos = span.end;
     });
@@ -652,8 +662,8 @@ function printMonth(mode) {
                             '<div class="print-month-content">' + linesHtml + '</div>' +
                         '</div>';
         } else {
-            // Célula vazia para dias de outros meses
-            gridHtml += '<div class="print-month-day other-month"></div>';
+            // Célula invisível para dias de outros meses
+            gridHtml += '<div class="print-month-day other-month" style="border: none !important;"></div>';
         }
         
         currentDate.setDate(currentDate.getDate() + 1);
