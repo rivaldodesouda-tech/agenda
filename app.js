@@ -387,7 +387,7 @@ function createNotebookLine(index, lineData) {
     content.contentEditable = true;
     content.setAttribute('data-index', index);
     
-    if (lineData && lineData.text) {
+    if (lineData) {
         content.innerHTML = renderLineWithColors(lineData);
     }
 
@@ -400,7 +400,28 @@ function createNotebookLine(index, lineData) {
         highlightActiveLine(wrapper);
     });
 
-    // Suporte para colar texto sem formatação
+    // Navegação por Tab e Enter (Retorno no iPhone)
+    content.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab' || e.key === 'Enter') {
+            e.preventDefault();
+            var nextIndex = index + 1;
+            if (nextIndex < 30) {
+                var nextLine = document.querySelector('[data-index="' + nextIndex + '"]');
+                if (nextLine) {
+                    nextLine.focus();
+                    // Colocar cursor no final do texto se houver
+                    var range = document.createRange();
+                    var sel = window.getSelection();
+                    range.selectNodeContents(nextLine);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+        }
+    });
+
+    // Suporte para colar mantendo apenas formatação básica (cores, negrito, itálico)
     content.addEventListener('paste', function(e) {
         e.preventDefault();
         var text = (e.originalEvent || e).clipboardData.getData('text/plain');
@@ -421,34 +442,12 @@ function highlightActiveLine(activeWrapper) {
 function updateLineData(index, element) {
     var dateStr = appState.selectedDay;
     if (!appState.days[dateStr]) {
-        appState.days[dateStr] = { lines: Array(30).fill(null).map(function() { return { text: '', spans: [] }; }) };
+        appState.days[dateStr] = { lines: Array(30).fill(null).map(function() { return { html: '' }; }) };
     }
     
-    var text = element.innerText;
-    var spans = [];
-    
-    // Capturar cores e backgrounds dos spans
-    var childNodes = element.childNodes;
-    var currentPos = 0;
-    
-    for (var i = 0; i < childNodes.length; i++) {
-        var node = childNodes[i];
-        var nodeText = node.textContent;
-        
-        if (node.nodeType === 1 && node.tagName === 'SPAN') {
-            spans.push({
-                start: currentPos,
-                end: currentPos + nodeText.length,
-                color: node.style.color,
-                backgroundColor: node.style.backgroundColor
-            });
-        }
-        currentPos += nodeText.length;
-    }
-
+    // Salvar o HTML completo para preservar cores, negrito e itálico
     appState.days[dateStr].lines[index] = {
-        text: text,
-        spans: spans
+        html: element.innerHTML
     };
     
     saveDataToStorage();
@@ -531,31 +530,12 @@ function isHolidayDate(date) {
 }
 
 function renderLineWithColors(lineData) {
-    if (!lineData || !lineData.text) return '';
-    if (!lineData.spans || lineData.spans.length === 0) return lineData.text;
-
-    var result = '';
-    var lastPos = 0;
-    
-    // Ordenar spans por início
-    var sortedSpans = lineData.spans.sort(function(a, b) { return a.start - b.start; });
-
-    sortedSpans.forEach(function(span) {
-        // Texto antes do span
-        result += lineData.text.substring(lastPos, span.start);
-        // Texto colorido e com background
-        var style = '';
-        if (span.color) style += 'color: ' + span.color + ';';
-        if (span.backgroundColor) style += 'background-color: ' + span.backgroundColor + ';';
-        
-        result += '<span style="' + style + '">' + 
-                  lineData.text.substring(span.start, span.end) + '</span>';
-        lastPos = span.end;
-    });
-
-    // Resto do texto
-    result += lineData.text.substring(lastPos);
-    return result;
+    if (!lineData) return '';
+    // Se tiver HTML (novo formato), retorna o HTML
+    if (lineData.html) return lineData.html;
+    // Se tiver apenas texto (formato antigo), retorna o texto
+    if (lineData.text) return lineData.text;
+    return '';
 }
 
 // ========== IMPRESSÃO ==========
