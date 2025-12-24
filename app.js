@@ -739,9 +739,8 @@ async function exportMonthToPdf() {
     const { jsPDF } = window.jspdf;
     const monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     
-    // Criar um elemento temporário para renderizar o conteúdo do PDF
     const tempDiv = document.createElement('div');
-    tempDiv.style.width = '1200px';
+    tempDiv.style.width = '1400px';
     tempDiv.style.padding = '20px';
     tempDiv.style.background = 'white';
     tempDiv.style.position = 'absolute';
@@ -753,45 +752,51 @@ async function exportMonthToPdf() {
     let gridHtml = '';
     const firstDay = new Date(year, month, 1);
     const startDate = new Date(firstDay);
-    startDate.setDate(firstDay.getDate() - firstDay.getDay());
+    
+    // Ajustar para começar na Segunda-feira (1)
+    // Se o primeiro dia for Domingo (0), volta 6 dias. Se for Segunda (1), volta 0.
+    let diff = firstDay.getDay() - 1;
+    if (diff === -1) diff = 6; 
+    startDate.setDate(firstDay.getDate() - diff);
+    
     const currentDate = new Date(startDate);
 
+    // Gerar 6 semanas (42 dias) para garantir cobertura total
     for (let i = 0; i < 42; i++) {
         const isOtherMonth = currentDate.getMonth() !== month;
-        if (!isOtherMonth) {
-            const dateStr = getDateString(currentDate);
-            const dayData = appState.days[dateStr];
-            const isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
+        const dateStr = getDateString(currentDate);
+        const dayData = appState.days[dateStr];
+        const isSpecial = currentDate.getDay() === 0 || currentDate.getDay() === 6 || isHolidayDate(currentDate);
+        
+        let linesHtml = '';
+        // Sempre gerar 17 linhas
+        for (let idx = 0; idx < 17; idx++) {
+            const line = (dayData && dayData.lines && dayData.lines[idx]) ? dayData.lines[idx] : null;
+            const text = (line && line.text) ? line.text : '';
             
-            let linesHtml = '';
-            if (dayData && dayData.lines) {
-                linesHtml = dayData.lines.map((l, idx) => {
-                    if (l && (l.text || l.html) && (l.text || "").trim() !== '') {
-                        return `<div style="border-bottom: 1px solid #eee; font-size: 10px; padding: 2px 0; display: flex;">
-                                    <span style="min-width: 20px; font-weight: bold; color: #999;">${idx + 1}.</span>
-                                    <span>${l.text || ''}</span>
-                                </div>`;
-                    }
-                    return '';
-                }).join('');
-            }
-
-            gridHtml += `<div style="width: 14.28%; border: 1px solid #000; min-height: 150px; float: left; box-sizing: border-box; background: ${isSpecial ? '#fff5f5' : 'white'};">
-                            <div style="background: ${isSpecial ? '#c41e3a' : '#f8f9fa'}; color: ${isSpecial ? 'white' : 'black'}; padding: 4px; font-weight: bold; text-align: center; border-bottom: 1px solid #000;">
-                                ${currentDate.getDate()}
-                            </div>
-                            <div style="padding: 4px;">${linesHtml}</div>
+            linesHtml += `<div style="border-bottom: 1px solid #f0f0f0; font-size: 10px; padding: 2px 0; display: flex; height: 16px; align-items: center;">
+                            <span style="min-width: 20px; font-weight: bold; color: #ccc; font-size: 8px;">${idx + 1}.</span>
+                            <span style="color: #333;">${text}</span>
                         </div>`;
-        } else {
-            gridHtml += `<div style="width: 14.28%; min-height: 150px; float: left; box-sizing: border-box; border: 1px solid transparent;"></div>`;
         }
+
+        gridHtml += `<div style="width: 14.28%; border: 1px solid #000; min-height: 320px; float: left; box-sizing: border-box; background: ${isOtherMonth ? '#fafafa' : (isSpecial ? '#fff5f5' : 'white')}; position: relative; opacity: ${isOtherMonth ? '0.3' : '1'};">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; font-weight: bold; color: ${isSpecial ? 'rgba(196, 30, 58, 0.15)' : 'rgba(0, 0, 0, 0.05)'}; z-index: 0; pointer-events: none;">
+                            ${currentDate.getDate()}
+                        </div>
+                        <div style="background: ${isSpecial ? '#c41e3a' : '#f8f9fa'}; color: ${isSpecial ? 'white' : 'black'}; padding: 4px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; font-size: 14px; position: relative; z-index: 1;">
+                            ${currentDate.getDate()}
+                        </div>
+                        <div style="padding: 4px; position: relative; z-index: 1;">${linesHtml}</div>
+                    </div>`;
+        
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
     tempDiv.innerHTML = `
-        <h1 style="text-align: center; color: #c41e3a; margin-bottom: 20px;">Agenda Mensal - ${monthName.toUpperCase()}</h1>
+        <h1 style="text-align: center; color: #c41e3a; margin-bottom: 20px; font-size: 32px;">AGENDA MENSAL - ${monthName.toUpperCase()}</h1>
         <div style="display: flex; background: #f1f5f9; border: 1px solid #000; border-bottom: none;">
-            ${['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'].map(d => `<div style="flex: 1; text-align: center; padding: 8px; font-weight: bold; border-right: 1px solid #000;">${d}</div>`).join('')}
+            ${['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'].map(d => `<div style="flex: 1; text-align: center; padding: 10px; font-weight: bold; border-right: 1px solid #000; font-size: 16px;">${d}</div>`).join('')}
         </div>
         <div style="overflow: hidden; border-left: 1px solid #000;">
             ${gridHtml}
