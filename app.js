@@ -740,11 +740,13 @@ async function exportMonthToPdf() {
     const monthName = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     
     const tempDiv = document.createElement('div');
-    tempDiv.style.width = '1400px';
-    tempDiv.style.padding = '20px';
+    // Aumentar largura para garantir que caiba tudo sem cortes
+    tempDiv.style.width = '1600px';
+    tempDiv.style.padding = '40px';
     tempDiv.style.background = 'white';
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
+    tempDiv.style.fontFamily = 'Arial, sans-serif';
     
     const year = appState.currentDate.getFullYear();
     const month = appState.currentDate.getMonth();
@@ -753,22 +755,21 @@ async function exportMonthToPdf() {
     const firstDay = new Date(year, month, 1);
     const startDate = new Date(firstDay);
     
-    // Ajustar para começar na Segunda-feira (1)
-    // Se o primeiro dia do mês for Domingo (0), diff será -1, então recuamos 6 dias para chegar na Segunda anterior.
-    // Se for Segunda (1), diff será 0.
     let diff = firstDay.getDay() - 1;
     if (diff === -1) diff = 6; 
     startDate.setDate(firstDay.getDate() - diff);
     
     const currentDate = new Date(startDate);
 
-    // O loop de 42 dias (6 semanas) garante que a estrutura de 7 colunas (Seg-Dom) seja mantida.
-    for (let i = 0; i < 42; i++) {
+    // Determinar se precisamos de 5 ou 6 semanas
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const totalDaysToShow = (diff + lastDayOfMonth.getDate() > 35) ? 42 : 35;
+
+    for (let i = 0; i < totalDaysToShow; i++) {
         const isOtherMonth = currentDate.getMonth() !== month;
         
         if (isOtherMonth) {
-            // Célula vazia para dias de outros meses
-            gridHtml += `<div style="width: 14.28%; border: 1px solid #000; min-height: 350px; float: left; box-sizing: border-box; background: white;"></div>`;
+            gridHtml += `<div style="width: 14.285%; border: 1px solid #000; min-height: 380px; float: left; box-sizing: border-box; background: #fdfdfd;"></div>`;
         } else {
             const dateStr = getDateString(currentDate);
             const dayData = appState.days[dateStr];
@@ -777,39 +778,35 @@ async function exportMonthToPdf() {
             let linesHtml = '';
             for (let idx = 0; idx < 17; idx++) {
                 const line = (dayData && dayData.lines && dayData.lines[idx]) ? dayData.lines[idx] : null;
-                const text = (line && line.text) ? line.text : '';
+                const content = line ? renderLineWithColors(line) : '&nbsp;';
                 
-                linesHtml += `<div style="border-bottom: 1px solid #e0e0e0; font-size: 11px; padding: 3px 0; display: flex; height: 18px; align-items: center;">
-                                <span style="min-width: 22px; font-weight: bold; color: #bbb; font-size: 9px;">${idx + 1}.</span>
-                                <span style="color: #333; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${text}</span>
+                linesHtml += `<div style="border-bottom: 1px solid #e0e0e0; font-size: 12px; padding: 4px 0; display: flex; height: 20px; align-items: center; overflow: hidden;">
+                                <span style="min-width: 25px; font-weight: bold; color: #bbb; font-size: 10px;">${idx + 1}.</span>
+                                <div style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${content}</div>
                             </div>`;
             }
 
-            gridHtml += `<div style="width: 14.28%; border: 1px solid #000; min-height: 350px; float: left; box-sizing: border-box; background: ${isSpecial ? '#fff5f5' : 'white'}; position: relative; overflow: hidden;">
-                            <!-- Número do dia centralizado e 3x maior -->
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: ${isSpecial ? 'rgba(196, 30, 58, 0.1)' : 'rgba(0, 0, 0, 0.05)'}; z-index: 0; pointer-events: none;">
+            gridHtml += `<div style="width: 14.285%; border: 1px solid #000; min-height: 380px; float: left; box-sizing: border-box; background: ${isSpecial ? '#fff5f5' : 'white'}; position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; font-weight: bold; color: ${isSpecial ? 'rgba(196, 30, 58, 0.08)' : 'rgba(0, 0, 0, 0.04)'}; z-index: 0; pointer-events: none;">
                                 ${currentDate.getDate()}
                             </div>
-                            <!-- Cabeçalho do dia -->
-                            <div style="background: ${isSpecial ? '#c41e3a' : '#f8f9fa'}; color: ${isSpecial ? 'white' : 'black'}; padding: 6px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; font-size: 16px; position: relative; z-index: 1;">
+                            <div style="background: ${isSpecial ? '#c41e3a' : '#f8f9fa'}; color: ${isSpecial ? 'white' : 'black'}; padding: 8px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; font-size: 18px; position: relative; z-index: 1;">
                                 ${currentDate.getDate()}
                             </div>
-                            <!-- Conteúdo com 17 linhas -->
-                            <div style="padding: 4px; position: relative; z-index: 1;">
+                            <div style="padding: 6px; position: relative; z-index: 1;">
                                 ${linesHtml}
                             </div>
                         </div>`;
         }
-        
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
     tempDiv.innerHTML = `
-        <h1 style="text-align: center; color: #c41e3a; margin-bottom: 25px; font-size: 36px; font-family: Arial, sans-serif;">AGENDA MENSAL - ${monthName.toUpperCase()}</h1>
-        <div style="display: flex; background: #f1f5f9; border: 1px solid #000; border-bottom: none; font-family: Arial, sans-serif;">
-            ${['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'].map(d => `<div style="flex: 1; text-align: center; padding: 12px; font-weight: bold; border-right: 1px solid #000; font-size: 18px;">${d}</div>`).join('')}
+        <h1 style="text-align: center; color: #c41e3a; margin-bottom: 30px; font-size: 42px; text-transform: uppercase;">Agenda Mensal - ${monthName}</h1>
+        <div style="display: flex; background: #f1f5f9; border: 1px solid #000; border-bottom: none;">
+            ${['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'].map(d => `<div style="flex: 1; text-align: center; padding: 15px; font-weight: bold; border-right: 1px solid #000; font-size: 20px;">${d}</div>`).join('')}
         </div>
-        <div style="overflow: hidden; border-left: 1px solid #000; font-family: Arial, sans-serif;">
+        <div style="overflow: hidden; border-left: 1px solid #000; border-bottom: 1px solid #000;">
             ${gridHtml}
         </div>
     `;
@@ -820,7 +817,8 @@ async function exportMonthToPdf() {
         const canvas = await html2canvas(tempDiv, {
             scale: 2,
             useCORS: true,
-            logging: false
+            logging: false,
+            backgroundColor: '#ffffff'
         });
         
         const imgData = canvas.toDataURL('image/png');
