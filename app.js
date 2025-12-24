@@ -29,9 +29,13 @@ var appState = {
 document.addEventListener('DOMContentLoaded', function() {
     loadDataFromStorage();
     initializeEventListeners();
-    renderWeekView();
-    renderColorPalette();
-    setupGestureHandling();
+    
+    // Pequeno atraso para garantir que o DOM esteja pronto no iOS
+    setTimeout(function() {
+        renderWeekView();
+        renderColorPalette();
+        setupGestureHandling();
+    }, 100);
 });
 
 // ========== ARMAZENAMENTO LOCAL ==========
