@@ -8,8 +8,8 @@ var COLORS = [
 ];
 
 var FERIADOS_BRASIL = [
-    '01-01', '02-13', '04-21', '05-01',
-    '09-07', '10-12', '11-02', '11-20', '12-25'
+    '01-01', '02-13', '04-21', '05-01', '09-07',
+    '10-12', '11-02', '11-20', '12-25'
 ];
 
 // ========== ESTADO ==========
@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', function () {
 function saveDataToStorage() {
     localStorage.setItem('plannerData', JSON.stringify(appState.days));
 }
-
 function loadDataFromStorage() {
     var stored = localStorage.getItem('plannerData');
     if (stored) appState.days = JSON.parse(stored);
@@ -95,12 +94,11 @@ function printMonth() {
     }
 }
 
-// ========== IMPRESSÃO PLOTTER CORRIGIDA ==========
+// ====== CORRIGIDO AQUI, SEM QUEBRAR O RESTO ======
 function printMonthPlotterREAL() {
 
     var year = appState.currentDate.getFullYear();
     var month = appState.currentDate.getMonth();
-
     var monthName = appState.currentDate
         .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
         .toUpperCase();
@@ -114,14 +112,14 @@ function printMonthPlotterREAL() {
     var cells = '';
     var d = new Date(startDate);
 
-    for (var i = 0; i < 42; i++) {
+    for (let i = 0; i < 42; i++) {
 
-        var isOther = d.getMonth() !== month;
-        var isSpecial = d.getDay() === 0 || d.getDay() === 6 || isHolidayDate(d);
+        let isOther = d.getMonth() !== month;
+        let isSpecial = d.getDay() === 0 || d.getDay() === 6 || isHolidayDate(d);
 
-        var lines = '';
+        let lines = '';
         if (!isOther) {
-            for (var l = 0; l < 17; l++) { // ✅ 17 LINHAS EXATAS
+            for (let l = 0; l < 17; l++) {   // ✅ 17 LINHAS EXATAS
                 lines += `
                     <div class="line">
                         <span>${l + 1}.</span>
@@ -162,7 +160,7 @@ html, body {
     background: white;
 }
 
-/* 🔑 ÁREA QUASE TOTAL DO ROLO */
+/* 🔑 QUASE TODA A PÁGINA */
 #calendar {
     position: absolute;
     left: 1cm;
@@ -174,7 +172,7 @@ html, body {
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: 4cm repeat(6, 1fr);
 
-    border: 5px solid black;
+    border: 4px solid black;
     box-sizing: border-box;
 }
 
@@ -184,13 +182,14 @@ html, body {
     font-weight: bold;
     text-align: center;
     line-height: 4cm;
-    border-bottom: 5px solid black;
+    border-bottom: 4px solid black;
 }
 
 .day {
     border-right: 3px solid black;
     border-bottom: 3px solid black;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .day.special .num {
@@ -209,7 +208,7 @@ html, body {
 
 .line {
     height: 0.85cm;
-    border-bottom: 1.4px solid black;
+    border-bottom: 1.3px solid black;
     display: flex;
     align-items: center;
     font-size: 0.85cm;
@@ -245,13 +244,9 @@ html, body {
 window.onload = function () {
     document.body.style.zoom = "100%";
     document.documentElement.style.zoom = "100%";
-    setTimeout(function () {
-        window.print();
-    }, 600);
+    setTimeout(function () { window.print(); }, 600);
 };
-window.onafterprint = function () {
-    window.close();
-};
+window.onafterprint = function () { window.close(); };
 </script>
 
 </body>
@@ -260,3 +255,4 @@ window.onafterprint = function () {
 
     win.document.close();
 }
+
