@@ -497,7 +497,10 @@ function applyColorToSelection() {
     // Usar execCommand para compatibilidade e simplicidade
     // Se for preto ou cinza (últimas cores), aplica como background
     if (appState.selectedColor >= COLORS.length - 2) {
-        document.execCommand('backColor', false, color);
+        // No iOS 12, backColor pode não funcionar bem em contentEditable, tentamos hiliteColor também
+        if (!document.execCommand('backColor', false, color)) {
+            document.execCommand('hiliteColor', false, color);
+        }
     } else {
         document.execCommand('foreColor', false, color);
     }
@@ -662,8 +665,8 @@ function printMonth(mode) {
                             '<div class="print-month-content">' + linesHtml + '</div>' +
                         '</div>';
         } else {
-            // Célula invisível para dias de outros meses
-            gridHtml += '<div class="print-month-day other-month" style="border: none !important;"></div>';
+            // Célula invisível para dias de outros meses - removendo completamente bordas e visibilidade
+            gridHtml += '<div class="print-month-day other-month" style="border: none !important; background: none !important; visibility: hidden !important;"></div>';
         }
         
         currentDate.setDate(currentDate.getDate() + 1);
@@ -679,7 +682,7 @@ function printMonth(mode) {
         '.print-month-day { float: left; width: 14.28%; border-right: 1px solid #000; border-bottom: 1px solid #000; height: 96.67mm; position: relative; overflow: hidden; box-sizing: border-box; }' +
         '.print-month-num { font-weight: bold; font-size: 14px !important; padding: 4px; color: #000 !important; }' +
         '.print-month-day.special .print-month-num { color: #FF0000; }' +
-        '.print-month-day.other-month { background: #f9f9f9; color: #ccc; }' +
+        '.print-month-day.other-month { background: none !important; border: none !important; visibility: hidden !important; }' +
         '.print-month-content { font-size: ' + (mode === 'large' ? '10px' : '10px') + '; line-height: ' + (mode === 'large' ? '1.1' : '1.1') + '; padding: 0 2px; }' +
         '.print-month-line { border-bottom: 1.5px solid #000 !important; padding: ' + (mode === 'large' ? '1px' : '1px') + ' 0; word-break: break-word; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; height: ' + (mode === 'large' ? '5.2mm' : '5.68mm') + '; box-sizing: border-box; }' +
         '.print-line-num { min-width: 18px; font-weight: bold !important; margin-right: 4px; font-size: 10px !important; color: #000 !important; display: inline-block; }' +
