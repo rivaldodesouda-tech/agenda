@@ -134,8 +134,9 @@ body {
     background: white;
     display: flex;
     flex-direction: column;
-    min-height: 200px; /* Aumentado para acomodar melhor as 10 linhas */
+    min-height: 100px;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .day-card-header {

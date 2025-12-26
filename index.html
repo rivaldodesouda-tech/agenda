@@ -193,12 +193,13 @@
                     contentLines.push({ index: i + 1, data: line });
                 }
                 
-                // Tela: 10 linhas visíveis
-                const lineWrap = document.createElement('div');
-                lineWrap.className = 'day-line-wrapper no-print' + (hasContent ? ' has-content' : ' empty-line');
-                if (i >= 10) lineWrap.style.display = 'none';
-                lineWrap.innerHTML = `<span class="line-number-preview" style="color:#bbb;">${i+1}.</span><div class="day-line-preview">${line.html || line.text || '&nbsp;'}</div>`;
-                content.appendChild(lineWrap);
+                // Tela: Visualização corrida (mostra todas as linhas com conteúdo)
+                if (hasContent) {
+                    const lineWrap = document.createElement('div');
+                    lineWrap.className = 'day-line-wrapper no-print has-content';
+                    lineWrap.innerHTML = `<span class="line-number-preview" style="color:#bbb;">${i+1}.</span><div class="day-line-preview">${line.html || line.text || '&nbsp;'}</div>`;
+                    content.appendChild(lineWrap);
+                }
             }
 
             // Impressão Semanal: 30 linhas
