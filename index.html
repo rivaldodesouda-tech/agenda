@@ -367,41 +367,37 @@
                     }
                 });
 
-                // Lógica para tela (comportamento original - mostra anotações)
-                html += '<div class="no-print">';
-                contentLines.forEach(function(item) {
-                    var cleanHtml = (item.data.html || item.data.text).replace(/font-size:[^;"]+;?/g, '');
-                    html += '<div class="month-line-rich"><span class="line-num">' + item.index + '.</span> ' + cleanHtml + '</div>';
-                });
-                html += '</div>';
-
-                // Lógica para Impressão/PDF (3 Colunas de 10 linhas cada)
-                html += '<div class="print-only month-print-columns" style="display: flex; gap: 1px; width: 100%; height: 100%; overflow: visible;">';
+                // Lógica unificada para Tela e Impressão (3 Colunas de 10 linhas cada)
+                // Usamos classes CSS para controlar a aparência em cada modo, evitando duplicação de HTML
+                html += '<div class="month-content-wrapper" style="display: flex; gap: 1px; width: 100%; height: 100%; overflow: visible;">';
                 
-                var pCol1 = '<div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">';
-                var pCol2 = '<div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">';
-                var pCol3 = '<div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">';
+                var pCol1 = '<div class="month-col" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">';
+                var pCol2 = '<div class="month-col" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">';
+                var pCol3 = '<div class="month-col" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">';
                 
                 // Calcular fonte baseada no volume total de texto
                 var totalChars = contentLines.reduce(function(acc, curr) { 
                     return acc + (curr.data.text || curr.data.html || "").length; 
                 }, 0);
                 
+                // Fonte para impressão (será sobrescrita via CSS para tela se necessário)
                 var fontSize = 7;
                 if (totalChars > 600 || contentLines.length > 25) fontSize = 4;
                 else if (totalChars > 400 || contentLines.length > 20) fontSize = 5;
                 else if (totalChars > 200 || contentLines.length > 12) fontSize = 6;
 
-                // Criar as 30 linhas (mesmo as vazias para manter o grid se necessário, ou apenas as com conteúdo)
-                // O usuário pediu 30 linhas distribuídas em 3 colunas
                 for (var lineIdx = 1; lineIdx <= 30; lineIdx++) {
                     var lineData = dayData.lines[lineIdx-1];
                     var hasContent = lineData && (lineData.text || lineData.html);
+                    
+                    // Na tela, só mostramos as linhas que têm conteúdo para não poluir
+                    // Na impressão, mostramos as 30 linhas (ou o grid) conforme solicitado
+                    var lineClass = hasContent ? 'month-line-rich has-content' : 'month-line-rich empty-line';
                     var cleanHtml = hasContent ? (lineData.html || lineData.text).replace(/font-size:[^;"]+;?/g, '') : '&nbsp;';
                     
-                    var lineHtml = '<div class="month-line-rich" style="font-size:' + fontSize + 'px; border-bottom: 0.1px solid #eee; height: ' + (100/10) + '%; line-height: 1; word-break: break-all; white-space: normal; display: flex; align-items: center;">' +
-                                   '<span style="color:#ccc; font-size: 0.8em; width: 8px; flex-shrink: 0;">' + lineIdx + '.</span> ' +
-                                   '<div style="flex: 1; overflow: hidden;">' + cleanHtml + '</div></div>';
+                    var lineHtml = '<div class="' + lineClass + '" style="font-size:' + fontSize + 'px; border-bottom: 0.1px solid #eee; height: ' + (100/10) + '%; line-height: 1; word-break: break-all; white-space: normal; display: flex; align-items: center;">' +
+                                   '<span class="line-num-label" style="color:#ccc; font-size: 0.8em; width: 10px; flex-shrink: 0;">' + lineIdx + '.</span> ' +
+                                   '<div class="line-text-content" style="flex: 1; overflow: hidden;">' + cleanHtml + '</div></div>';
                     
                     if (lineIdx <= 10) pCol1 += lineHtml;
                     else if (lineIdx <= 20) pCol2 += lineHtml;
