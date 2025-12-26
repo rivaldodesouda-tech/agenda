@@ -246,9 +246,11 @@
                     contentLines.push({ index: i + 1, data: line });
                 }
                 
-                // Renderizar para tela (comportamento original)
+                // Renderizar para tela (apenas as primeiras 10 linhas visíveis por padrão)
                 var lineWrap = document.createElement('div');
                 lineWrap.className = 'day-line-wrapper no-print' + (hasContent ? ' has-content' : ' empty-line');
+                if (i >= 10) lineWrap.style.display = 'none'; // Ocultar linhas além da 10ª na tela
+                
                 lineWrap.innerHTML = '<span class="line-number-preview" style="color:#bbb;">' + (i+1) + '.</span><div class="day-line-preview">' + (line.html || line.text || '&nbsp;') + '</div>';
                 content.appendChild(lineWrap);
             }

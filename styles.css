@@ -118,16 +118,12 @@ body {
 .week-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr); /* Forçar 2 colunas */
     gap: 1px;
     width: 100%;
 }
 
-@media (max-width: 768px) {
-    .week-grid {
-        grid-template-columns: 1fr;
-    }
-}
+/* Removido o media query que mudava para 1 coluna em telas pequenas */
 
 .week-column {
     display: contents;
@@ -138,7 +134,7 @@ body {
     background: white;
     display: flex;
     flex-direction: column;
-    min-height: 150px;
+    min-height: 200px; /* Aumentado para acomodar melhor as 10 linhas */
     cursor: pointer;
 }
 
