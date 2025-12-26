@@ -239,21 +239,23 @@ body {
 
 /* Estilos para a visão unificada na tela */
 .month-content-wrapper {
-    flex-direction: column; /* Na tela, empilhamos as colunas para melhor leitura */
-}
-
-.month-line-rich.empty-line {
-    display: none; /* Ocultar linhas vazias na tela */
-}
-
-.month-line-rich.has-content {
-    display: flex;
-    font-size: 10px !important; /* Fonte maior na tela */
-    padding: 2px 0;
+    display: block !important; /* Na tela, usamos bloco simples */
 }
 
 .month-col {
     display: block !important;
+    width: 100% !important;
+    border: none !important;
+}
+
+.month-line-rich.empty-line {
+    display: none !important; /* Ocultar linhas vazias na tela */
+}
+
+.month-line-rich.has-content {
+    display: flex !important;
+    font-size: 10px !important; /* Fonte maior na tela */
+    padding: 2px 0;
 }
 
 .month-day-header {
@@ -832,13 +834,19 @@ body {
     }
 
     body.print-monthly-landscape .month-content-wrapper {
-        display: flex !important;
-        flex-direction: row !important; /* Na impressão, forçamos as 3 colunas lado a lado */
-        gap: 1px !important;
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+
+    body.print-monthly-landscape .month-col {
+        display: table-cell !important;
+        width: 33.33% !important;
+        vertical-align: top !important;
     }
 
     body.print-monthly-landscape .month-line-rich.empty-line {
-        display: flex !important; /* Na impressão, mostramos as linhas vazias para manter o grid */
+        display: flex !important;
         visibility: visible !important;
     }
 
@@ -849,6 +857,6 @@ body {
         white-space: normal !important;
         color: #000 !important;
         border-bottom: 0.1px solid #eee !important;
-        align-items: center !important;
+        align-items: flex-start !important;
     }
 }
