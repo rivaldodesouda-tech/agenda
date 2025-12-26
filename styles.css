@@ -11,77 +11,43 @@ html, body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #f5f5f5;
     color: #333;
-    -webkit-user-select: text;
-    user-select: text;
-    -webkit-text-size-adjust: 100%;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    /* Prevenir scroll elástico no iOS mas permitir interação */
-    position: fixed;
-    overflow: hidden;
-    touch-action: manipulation;
 }
 
 body {
     width: 100%;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
 }
 
 /* ========== LAYOUT GERAL ========== */
 #app {
     width: 100%;
-    height: 100%;
-    display: -webkit-box;
-    display: -webkit-flex;
+    min-height: 100vh;
     display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -webkit-flex-direction: column;
     flex-direction: column;
-    /* Suporte para Safe Areas (iPhone X até iPhone 17) */
-    padding-top: env(safe-area-inset-top); 
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
 }
 
 .main-view {
-    -webkit-box-flex: 1;
-    -webkit-flex: 1;
     flex: 1;
-    display: -webkit-box;
-    display: -webkit-flex;
     display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -webkit-flex-direction: column;
     flex-direction: column;
-    overflow: hidden;
     width: 100%;
 }
 
 /* ========== HEADER ========== */
 .header {
-    display: -webkit-box;
-    display: -webkit-flex;
     display: flex;
-    -webkit-box-pack: justify;
-    -webkit-justify-content: space-between;
     justify-content: space-between;
-    -webkit-box-align: center;
-    -webkit-align-items: center;
     align-items: center;
-    padding: 10px 15px;
+    /* Suporte para Safe Area do iOS (Dynamic Island / Notch) */
+    padding: calc(15px + env(safe-area-inset-top, 0px)) 15px 10px 15px;
     background: #c41e3a;
     background: linear-gradient(135deg, #c41e3a 0%, #8b1428 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     z-index: 10;
 }
 
 .header-title h1 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
 }
 
@@ -93,31 +59,29 @@ body {
     border-radius: 50%;
     font-size: 20px;
     color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-appearance: none;
+    cursor: pointer;
 }
 
 /* ========== CONTROLES DE VISÃO ========== */
 .view-controls {
     display: flex;
-    padding: 10px;
+    padding: 12px 10px;
     background: white;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #eee;
+    gap: 10px;
     overflow-x: auto;
+    /* Melhorar rolagem no iOS */
     -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-    gap: 8px;
 }
 
-.view-btn, .btn-print {
+.view-btn, .btn-print, .btn-primary, .btn-secondary, .btn-pdf, .btn-backup {
     padding: 8px 12px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 13px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ddd;
     background: white;
-    flex-shrink: 0;
+    cursor: pointer;
+    font-weight: bold;
 }
 
 .view-btn.active {
@@ -132,27 +96,41 @@ body {
     border: none;
 }
 
+.btn-pdf {
+    background: #e53e3e;
+    color: white;
+    border: none;
+}
+
+.btn-backup {
+    background: #3182ce;
+    color: white;
+    border: none;
+}
+
 /* ========== VISÃO SEMANAL (GRID) ========== */
 .week-view-container {
     flex: 1;
     display: flex;
-    overflow: hidden;
+    background: #ddd;
 }
 
 .week-grid {
     flex: 1;
-    display: flex;
-    overflow-x: hidden;
-    background: #ddd;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .week-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .week-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
+    display: contents;
 }
 
 .day-card-grid {
@@ -160,95 +138,222 @@ body {
     background: white;
     display: flex;
     flex-direction: column;
-    min-height: 0;
-    -webkit-user-select: none;
-    user-select: none;
-}
-
-.day-card-grid.weekend, .day-card-grid.holiday {
-    background: #fff5f5;
+    min-height: 150px;
+    cursor: pointer;
 }
 
 .day-card-header {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: 6px 8px;
+    font-size: 12px;
     font-weight: bold;
     background: #f8f9fa;
     border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.day-card-header.weekend {
-    background: #c41e3a;
-    color: white;
+.day-number-circle {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    background: #eee;
+    border-radius: 50%;
+    font-size: 11px;
+}
+
+.special-day .day-name-label {
+    color: #c41e3a;
+}
+
+.special-day .day-number-circle {
+    background: #ffebeb;
+    color: #c41e3a;
 }
 
 .day-card-content {
     flex: 1;
     padding: 4px;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    max-height: calc(7 * 1.6em);
 }
 
 .day-line-wrapper {
     display: flex;
-    font-size: 9px;
-    line-height: 1.2;
-    margin-bottom: 1px;
+    font-size: 10px;
+    line-height: 1.4;
+    margin-bottom: 2px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .line-number-preview {
     color: #ccc;
     margin-right: 4px;
     font-weight: bold;
+    width: 15px;
 }
 
 .day-line-preview {
     flex: 1;
     word-break: break-word;
+    min-height: 1.2em;
 }
 
 /* ========== VISÃO MENSAL ========== */
 .month-view {
     flex: 1;
     background: white;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.month-print-header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding: 10px 0;
+    width: 100%;
+}
+
+.month-print-header h1 {
+    font-size: 28px;
+    margin: 0;
+    color: #000;
+    font-weight: bold;
+}
+
+.month-calendar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .month-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    flex: 1;
+    width: 100%;
+    height: 100%;
 }
 
 .month-day-header {
-    width: 14.28%;
-    padding: 8px 0;
+    padding: 5px;
     text-align: center;
-    font-size: 10px;
-    font-weight: bold;
-    background: #f1f5f9;
-    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+    font-weight: 900;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.month-day-header.special-day {
+    color: #c41e3a;
 }
 
 .month-day-cell {
-    width: 14.28%;
-    height: 80px;
-    border-right: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
-    padding: 2px;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 4px;
+    cursor: pointer;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 120px; /* Aumentado levemente para caber mais conteúdo */
+    background-color: #fff;
+}
+
+.month-day-cell.other-month {
+    background-color: #fafafa; /* Leve distinção para dias de outros meses, mas mantém bordas */
+}
+
+.month-day-num-container {
+    margin-bottom: 2px;
+    display: flex;
+    justify-content: center;
 }
 
 .month-day-num {
-    font-size: 11px;
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    background: #eee;
+    border-radius: 50%;
+    font-size: 16px;
     font-weight: bold;
 }
 
-.month-line-preview {
-    font-size: 7px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.special-day .month-day-num {
+    background: #ffcccc;
+    color: #c41e3a;
+}
+
+.month-cell-content {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 7.5px; /* Fonte ainda menor para garantir que caiba tudo */
+    line-height: 1.1;
+    max-height: 85px; /* Limite para não estourar o quadro */
+}
+
+.month-line-rich {
+    margin-bottom: 1px;
+    border-bottom: 1px dotted #eee;
+    word-break: break-word;
+    white-space: normal; /* Garante que o texto quebre linha */
+}
+
+.month-line-rich {
+    margin-bottom: 2px;
+    border-bottom: 1px dotted #eee;
+    word-break: break-word;
+}
+
+/* Estilo para o PDF e Impressão */
+.pdf-export-mode, .print-mode {
+    width: 297mm !important;
+    height: 210mm !important;
+    background: white !important;
+    padding: 2mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.pdf-export-mode .month-print-header, .print-mode .month-print-header {
+    display: block !important;
+}
+
+.pdf-export-mode .month-grid, .print-mode .month-grid {
+    flex: 1 !important;
+    display: grid !important;
+    height: calc(100% - 15mm) !important; /* Ajustado para dar espaço ao título sem sobrar no final */
+    border-bottom: 1px solid #000 !important; /* Borda inferior para fechar o grid */
+    border-right: 1px solid #000 !important; /* Borda direita para fechar o grid */
+}
+
+.pdf-export-mode .month-day-cell, .print-mode .month-day-cell {
+    height: auto !important;
+    flex: 1 !important;
+}
+
+.pdf-export-mode .month-day-header, .print-mode .month-day-header {
+    padding: 5px !important;
 }
 
 /* ========== EDIÇÃO DIÁRIA ========== */
@@ -262,13 +367,12 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    /* Suporte para Safe Areas */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    overflow-y: auto; /* Permitir rolagem da tela inteira se necessário */
 }
 
 .edit-header {
-    padding: 10px 15px;
+    /* Suporte para Safe Area do iOS na edição diária */
+    padding: calc(15px + env(safe-area-inset-top, 0px)) 15px 10px 15px;
     background: #667eea;
     color: white;
     display: flex;
@@ -276,103 +380,460 @@ body {
     align-items: center;
 }
 
-.edit-day-info {
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.edit-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.color-palette {
+.edit-toolbar {
     padding: 10px;
-    display: flex;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    gap: 10px;
     background: #f8f9fa;
     border-bottom: 1px solid #eee;
+    display: flex;
+    flex-direction: column; /* Mudar para coluna para organizar melhor */
+    gap: 10px;
+}
+
+.toolbar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.toolbar-group button {
+    width: 36px; /* Aumentado para melhor toque no mobile */
+    height: 36px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-group select {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.color-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(25px, 1fr)); /* Grid para forçar linhas */
+    gap: 8px;
+    padding: 5px;
+    width: 100%;
+}
+
+/* Ajuste específico para garantir 2 linhas se houver muitos botões */
+@media screen and (min-width: 300px) {
+    .color-buttons {
+        grid-template-columns: repeat(11, 1fr); /* 11 cores por linha = 22 cores em 2 linhas */
+    }
 }
 
 .color-btn {
-    width: 30px;
-    height: 30px;
+    width: 25px; /* Reduzido em ~20% para caber melhor no iPhone */
+    height: 25px;
     border-radius: 50%;
-    border: 2px solid white;
-    box-shadow: 0 0 0 1px #ddd;
+    border: 1px solid #ddd;
+    cursor: pointer;
     flex-shrink: 0;
 }
 
-.color-btn.active {
-    box-shadow: 0 0 0 2px #667eea;
+/* Ajuste para iPhone Retrato */
+@media screen and (max-width: 480px) {
+    .color-buttons {
+        gap: 3px;
+    }
+    .color-btn {
+        width: 22px !important;
+        height: 22px !important;
+    }
 }
 
 .notebook-container {
     flex: 1;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 10px;
-    background: #fff;
+    padding: 15px;
+    -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
 }
 
 .notebook-line-wrapper {
     display: flex;
     border-bottom: 1px solid #f0f0f0;
     padding: 8px 0;
-    align-items: flex-start;
 }
 
 .line-number {
-    width: 25px;
-    font-size: 11px;
+    width: 30px;
+    font-size: 14px;
     color: #ccc;
-    padding-top: 3px;
+    font-weight: bold;
 }
 
 .notebook-line {
     flex: 1;
     font-size: 16px;
-    line-height: 1.4;
     outline: none;
-    min-height: 1.4em;
+    min-height: 1.5em;
     word-break: break-word;
-    /* Estilo Highlight */
-    border-radius: 3px;
-    padding: 0 4px;
-    -webkit-user-select: text !important;
-    user-select: text !important;
-    cursor: text;
 }
 
-/* Garantir que o texto selecionado seja visível no iOS */
-.notebook-line * {
-    background-color: inherit;
-    color: inherit;
+/* ========== IMPRESSÃO ========== */
+.print-only {
+    display: none;
 }
 
-/* Estilos para impressão (ocultar elementos da UI) */
 @media print {
-    .header, .view-controls, .color-palette, .edit-header {
+    @page {
+        size: A4 portrait;
+        margin: 0; /* Remover margens padrão para ganhar espaço total */
+    }
+
+    /* Reset Geral para Impressão */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+
+    .no-print {
         display: none !important;
     }
-    #app, .day-edit-view {
-        padding: 0 !important;
-        position: static !important;
-        height: auto !important;
+
+    /* Ocultar linhas vazias na impressão para economizar espaço */
+    .day-line-wrapper.empty-line, .notebook-line-wrapper.empty-line {
+        display: none !important;
     }
-}
 
-/* Estilo para o botão de PDF */
-.btn-pdf {
-    background-color: #e74c3c !important;
-    color: white !important;
-    border: none !important;
-}
+    .print-only, .print-mode .print-only {
+        display: block !important;
+    }
+    
+    .print-mode .no-print {
+        display: none !important;
+    }
 
-.btn-pdf:hover {
-    background-color: #c0392b !important;
+    body, html {
+        background: white !important;
+        width: 100% !important;
+        height: auto !important;
+        font-family: Arial, sans-serif !important;
+    }
+
+    #app, .main-view {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* ========== 1. IMPRESSÃO SEMANAL (Layout Paisagem Proporcional) ========== */
+    body.print-weekly-landscape {
+        width: 297mm !important;
+        height: 210mm !important;
+    }
+
+    body.print-weekly-landscape @page {
+        size: A4 landscape !important;
+        margin: 0 !important;
+    }
+
+    .week-view-container {
+        display: block !important;
+        width: 297mm !important;
+        height: 210mm !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    .week-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: #000 !important;
+        border: 0.5px solid #000 !important;
+    }
+
+    body.print-weekly-landscape .day-card-grid {
+        background: white !important;
+        border: 0.2px solid #000 !important;
+        padding: 1mm !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+
+    body.print-weekly-landscape .special-day .day-name-label,
+    body.print-weekly-landscape .special-day .print-date,
+    body.print-weekly-landscape .special-day .print-day-name {
+        color: #c41e3a !important; /* Vermelho para Sábado, Domingo e Feriados */
+    }
+
+    .week-column {
+        display: contents !important;
+    }
+
+    .day-card-grid {
+        border: 0.5px solid #000 !important;
+        padding: 4px !important;
+        min-height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        page-break-inside: avoid !important;
+    }
+
+    body.print-weekly-landscape .day-print-header {
+        display: block !important;
+        border-bottom: 0.5px solid #000 !important;
+        margin-bottom: 1px !important;
+        padding: 1px 0 !important;
+        background: #f0f0f0 !important;
+    }
+
+    body.print-weekly-landscape .print-header-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        font-weight: bold !important;
+        line-height: 1 !important;
+    }
+
+    body.print-weekly-landscape .print-date {
+        font-size: 8px !important;
+    }
+
+    body.print-weekly-landscape .print-day-name {
+        font-size: 7px !important;
+        text-transform: uppercase !important;
+    }
+
+    body.print-weekly-landscape .print-divider {
+        display: none !important;
+    }
+
+    .day-card-grid.special-day .day-name-label,
+    .day-card-grid.special-day .print-date,
+    .day-card-grid.special-day .print-day-name {
+        color: #c41e3a !important; /* Vermelho para Sábado, Domingo e Feriados */
+    }
+
+    .week-column {
+        display: contents !important;
+    }
+
+    .day-card-grid {
+        page-break-inside: auto !important;
+        border: 0.5px solid #ddd !important;
+        margin-bottom: 3px !important;
+        padding: 3px !important;
+        min-height: auto !important;
+        width: 100% !important;
+    }
+
+    .day-card-grid .day-print-header {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        border-bottom: 0.5px solid #000 !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 1px !important;
+    }
+
+    .day-card-grid .print-header-content {
+        display: flex !important;
+        font-size: 9px !important;
+        font-weight: bold !important;
+    }
+
+    .day-card-grid .print-date, .day-card-grid .print-day-name {
+        font-size: 9px !important;
+        color: #000 !important;
+    }
+
+    /* Conteúdo das Linhas na Semana - Redução para caber TUDO */
+    .day-card-content {
+        display: block !important;
+        overflow: visible !important;
+    }
+
+    .day-line-wrapper {
+        display: flex !important;
+        padding: 1px 0 !important;
+        border-bottom: 0.2px solid #eee !important;
+        align-items: flex-start !important;
+    }
+
+    .day-print-columns {
+        display: block !important;
+        flex: 1 !important;
+        width: 100% !important;
+    }
+
+    .print-col {
+        display: block !important;
+        width: 100% !important;
+        border-right: none !important;
+        padding-right: 0 !important;
+    }
+
+    .print-col:last-child {
+        border-right: none !important;
+        padding-right: 0 !important;
+    }
+
+    .line-number-preview {
+        font-size: 6.5px !important;
+        width: 12px !important;
+        color: #888 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .day-line-preview {
+        font-size: 6px;
+        line-height: 1.1 !important;
+        word-break: break-word !important;
+        color: inherit !important;
+        overflow: visible !important;
+        white-space: normal !important; /* Permitir quebra de linha para não perder conteúdo */
+    }
+
+    /* ========== 2. IMPRESSÃO DIÁRIA (Individual) ========== */
+    .day-edit-view .day-print-header {
+        text-align: center !important;
+        margin-bottom: 10px !important;
+    }
+
+    .day-edit-view .print-date {
+        font-size: 18px !important;
+        font-weight: bold !important;
+    }
+
+    .day-edit-view .print-day-name {
+        font-size: 14px !important;
+    }
+
+    .notebook-line-wrapper {
+        display: flex !important;
+        padding: 3px 0 !important;
+        border-bottom: 0.5px solid #eee !important;
+    }
+
+    .line-number {
+        font-size: 8px !important;
+        width: 20px !important;
+    }
+
+    .notebook-line {
+        font-size: 10px; /* Removido !important para permitir ajuste via JS */
+        line-height: 1.3 !important;
+    }
+
+    /* ========== 3. IMPRESSÃO MENSAL PAISAGEM (ESTILO PDF) ========== */
+    body.print-monthly-landscape {
+        width: 297mm !important;
+        height: 210mm !important;
+    }
+
+    body.print-monthly-landscape @page {
+        size: A4 landscape !important;
+        margin: 0 !important; /* Remover margens para maximizar espaço */
+    }
+
+    body.print-monthly-landscape .month-view {
+        padding: 0 !important;
+        width: 297mm !important;
+        height: 210mm !important;
+    }
+    
+    body.print-monthly-landscape .header,
+    body.print-monthly-landscape .view-controls,
+    body.print-monthly-landscape .week-view-container,
+    body.print-monthly-landscape .day-edit-view,
+    body.print-monthly-landscape .day-card-grid.print-only {
+        display: none !important;
+    }
+
+    body.print-monthly-landscape .month-print-header {
+        display: block !important;
+        text-align: center;
+        padding: 5mm 0 2mm 0;
+        margin: 0;
+    }
+
+    body.print-monthly-landscape .month-print-header h1 {
+        font-size: 24px !important;
+        font-weight: bold !important;
+        margin: 0 !important;
+        color: #000 !important;
+    }
+
+    body.print-monthly-landscape .month-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-rows: 25px repeat(5, 1fr) !important;
+        height: calc(100% - 15mm) !important; /* Reduzir altura para dar espaço ao título */
+        width: 100% !important;
+        gap: 1px !important;
+        background: #ddd !important;
+    }
+
+    body.print-monthly-landscape .month-day-header {
+        font-size: 11px !important;
+        height: 30px !important;
+    }
+
+    body.print-monthly-landscape .month-day-cell {
+        padding: 2px !important;
+    }
+
+    body.print-monthly-landscape .month-day-num {
+        font-size: 10px !important;
+        width: 18px !important;
+        height: 18px !important;
+        line-height: 18px !important;
+        margin-bottom: 0 !important;
+    }
+    
+    body.print-monthly-landscape .month-day-num-container {
+        height: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+     body.print-monthly-landscape .month-cell-content {
+        display: block !important;
+        width: 100% !important;
+        height: calc(100% - 20px) !important; /* Espaço abaixo do número do dia */
+        overflow: visible !important;
+    }
+
+    body.print-monthly-landscape .month-print-columns {
+        display: flex !important;
+        height: 100% !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }}
+
+    body.print-monthly-landscape .month-line-rich {
+        display: flex !important;
+        width: 100% !important;
+        word-break: break-all !important;
+        white-space: normal !important;
+        color: #000 !important;
+        border-bottom: 0.1px solid #eee !important;
+        align-items: center !important;
+    }
 }
