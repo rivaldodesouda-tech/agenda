@@ -2,456 +2,315 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Planejador de Agenda Interativo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agenda Profissional</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Biblioteca para gerar PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div id="app">
-        <div id="mainView" class="main-view">
-            <div class="header no-print">
-                <button id="prevNav" class="btn-nav-arrow">‹</button>
-                <div class="header-title">
-                    <h1 id="headerTitle">Dez 2025</h1>
+        <!-- Cabeçalho Principal -->
+        <header class="no-print">
+            <div class="header-content">
+                <h1 id="headerTitle">DEZEMBRO 2025</h1>
+                <div class="nav-controls">
+                    <button onclick="changeDate(-1)">◀</button>
+                    <button onclick="goToToday()">HOJE</button>
+                    <button onclick="changeDate(1)">▶</button>
                 </div>
-                <button id="nextNav" class="btn-nav-arrow">›</button>
             </div>
+            <div class="view-controls">
+                <button id="weekViewBtn" onclick="switchView('week')" class="active">📅 Semanal</button>
+                <button id="monthViewBtn" onclick="switchView('month')">📆 Mensal</button>
+                <button id="printWeekBtn" onclick="printWeekly()" class="print-btn">🖨️ Imprimir Semana</button>
+                <button id="printMonthBtn" onclick="printMonthly()" class="print-btn" style="display:none;">🖨️ Imprimir Mês</button>
+            </div>
+        </header>
 
-            <div class="view-controls no-print">
-                <button id="viewWeekly" class="view-btn active">📅 Semanal</button>
-                <button id="viewMonthly" class="view-btn">📆 Mensal</button>
-                <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
-                <button id="exportPdfBtn" class="btn btn-pdf" style="display:none;">📄 Exportar PDF</button>
-                <button id="printWeekBtn" class="btn btn-print">🖨️ Imprimir Semana</button>
-                <button id="exportDataBtn" class="btn btn-backup">📤 Exportar Backup</button>
-                <button id="importDataBtn" class="btn btn-backup">📥 Importar Backup</button>
-                <input type="file" id="importFile" style="display:none" accept=".json">
-            </div>
-
-            <div id="weekView" class="week-view-container">
-                <div id="weekGrid" class="week-grid"></div>
-            </div>
-
-            <div id="monthView" class="month-view" style="display: none;">
-                <div id="monthPrintHeader" class="month-print-header print-only">
-                    <h1 id="monthPrintTitle"></h1>
-                </div>
-                <div id="monthCalendar" class="month-calendar"></div>
-            </div>
+        <!-- Cabeçalho de Impressão Mensal -->
+        <div id="monthPrintHeader" class="print-only month-print-header">
+            <h1 id="monthPrintTitle">DEZEMBRO 2025</h1>
         </div>
 
-        <div id="dayEditView" class="day-edit-view" style="display: none;">
-            <div class="edit-header no-print">
-                <div class="edit-header-left">
-                    <span id="editDayInfo" class="edit-day-info"></span>
-                </div>
-                <div class="edit-header-right">
-                    <button id="printDay" class="btn btn-primary">🖨️ Imprimir</button>
-                    <button id="closeDayEdit" class="btn btn-secondary">✕ Fechar</button>
+        <!-- Conteúdo Principal -->
+        <main>
+            <!-- Visão Semanal -->
+            <div id="weekView" class="view-container active">
+                <div id="weekGrid" class="week-grid">
+                    <!-- Cards dos dias serão inseridos aqui -->
                 </div>
             </div>
 
-            <div class="edit-toolbar no-print">
-                <div class="toolbar-row">
-                    <div class="toolbar-group">
-                        <button onclick="formatDoc('bold')" title="Negrito"><b>B</b></button>
-                        <button onclick="formatDoc('italic')" title="Itálico"><i>I</i></button>
-                        <button onclick="formatDoc('underline')" title="Sublinhado"><u>U</u></button>
-                        <button onclick="formatDoc('strikeThrough')" title="Tracejado"><s>S</s></button>
+            <!-- Visão Mensal -->
+            <div id="monthView" class="view-container">
+                <div class="month-calendar">
+                    <div class="month-day-headers">
+                        <div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div class="weekend">SÁB</div><div class="weekend">DOM</div>
                     </div>
-                    <div class="toolbar-group">
-                        <select onchange="formatDoc('fontSize', this.value); this.selectedIndex=0;">
-                            <option value="">Tamanho</option>
-                            <option value="1">Muito Pequeno</option>
-                            <option value="2">Pequeno</option>
-                            <option value="3">Normal</option>
-                            <option value="4">Grande</option>
-                            <option value="5">Muito Grande</option>
-                            <option value="6">Enorme</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="toolbar-row">
-                    <div class="toolbar-group" style="width: 100%;">
-                        <span class="label">Cores:</span>
-                        <div id="colorPalette" class="color-buttons"></div>
+                    <div id="monthGrid" class="month-grid">
+                        <!-- Células do mês serão inseridas aqui -->
                     </div>
                 </div>
             </div>
+        </main>
 
-            <div class="edit-content">
-                <div id="dayPrintHeader" class="print-only day-print-header">
-                    <div class="print-date" id="printDate"></div>
-                    <div class="print-day-name" id="printDayName"></div>
-                    <hr class="print-divider">
+        <!-- Modal de Edição Diária -->
+        <div id="editModal" class="modal no-print">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalDateTitle">22/12/2025 - Segunda-feira</h2>
+                    <div class="modal-actions">
+                        <button onclick="printDaily()" class="print-btn-small">🖨️</button>
+                        <button onclick="closeModal()" class="close-btn">&times;</button>
+                    </div>
                 </div>
-                <div class="notebook-container">
-                    <div id="notebookLines" class="notebook-lines"></div>
+                <div class="format-bar">
+                    <button onclick="formatText('bold')" title="Negrito"><b>B</b></button>
+                    <button onclick="formatText('foreColor', '#ff0000')" style="color:red">A</button>
+                    <button onclick="formatText('foreColor', '#008000')" style="color:green">A</button>
+                    <button onclick="formatText('foreColor', '#0000ff')" style="color:blue">A</button>
+                    <button onclick="formatText('hiliteColor', '#ffff00')" style="background:yellow">A</button>
+                    <button onclick="formatText('hiliteColor', '#00ff00')" style="background:lime">A</button>
+                    <button onclick="formatText('hiliteColor', '#ffcccc')" style="background:#ffcccc">A</button>
+                    <button onclick="formatText('removeFormat')">Clear</button>
+                </div>
+                <div id="notebook" class="notebook">
+                    <!-- 30 linhas de edição -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ========== CONFIGURAÇÕES E ESTADO ==========
-        var COLORS = ['#FF0000', '#FF6B00', '#FFD700', '#00D000', '#00B8D4', '#0066FF', '#6600FF', '#FF00FF', '#FF1493', '#00FF7F', '#FF4500', '#1E90FF', '#DC143C', '#00CED1', '#FFB6C1', '#32CD32', '#FF8C00', '#00FF00', '#FF69B4', '#000000', '#808080', '#FFFFFF'];
-        var FERIADOS_BRASIL = ['01-01', '02-13', '04-21', '05-01', '09-07', '10-12', '11-02', '11-20', '12-25'];
-        
-        var appState = {
+        // Estado da Aplicação
+        const appState = {
             currentDate: new Date(),
-            selectedDay: null,
-            selectedLineIndex: null,
-            days: {},
-            view: 'week'
+            view: 'week',
+            data: JSON.parse(localStorage.getItem('agendaData') || '{}'),
+            selectedDate: null,
+            selectedLineIndex: null
         };
 
-        // ========== UTILITÁRIOS ==========
-        function getDateString(date) {
-            var y = date.getFullYear();
-            var m = String(date.getMonth() + 1).padStart(2, '0');
-            var d = String(date.getDate()).padStart(2, '0');
-            return y + '-' + m + '-' + d;
+        // Inicialização
+        function init() {
+            render();
+            // Salvar automaticamente ao fechar ou mudar
+            window.addEventListener('beforeunload', () => saveToStorage());
         }
 
-        function getDayName(dayIndex) {
-            var days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-            return days[dayIndex];
+        function saveToStorage() {
+            localStorage.setItem('agendaData', JSON.stringify(appState.data));
         }
 
-        function isHolidayDate(date) {
-            var m = String(date.getMonth() + 1).padStart(2, '0');
-            var d = String(date.getDate()).padStart(2, '0');
-            return FERIADOS_BRASIL.indexOf(m + '-' + d) !== -1;
-        }
-
-        function isDarkColor(color) {
-            if (!color) return false;
-            if (color.startsWith('rgb')) {
-                var rgb = color.match(/\d+/g);
-                var r = parseInt(rgb[0]), g = parseInt(rgb[1]), b = parseInt(rgb[2]);
-            } else {
-                var hex = color.replace('#', '');
-                if (hex.length === 3) hex = hex.split('').map(function(s){return s+s}).join('');
-                var r = parseInt(hex.substr(0, 2), 16);
-                var g = parseInt(hex.substr(2, 2), 16);
-                var b = parseInt(hex.substr(4, 2), 16);
-            }
-            var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            return luminance < 0.5;
-        }
-
-        function formatDoc(cmd, val) {
-            if (cmd === 'hiliteColor') {
-                document.execCommand('hiliteColor', false, val);
-                // Aplicar cor de texto contrastante automaticamente
-                var textColor = isDarkColor(val) ? '#FFFFFF' : '#000000';
-                document.execCommand('foreColor', false, textColor);
-            } else {
-                document.execCommand(cmd, false, val);
-            }
+        function switchView(view) {
+            appState.view = view;
+            document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-controls button').forEach(el => el.classList.remove('active'));
             
-            if (appState.selectedLineIndex !== null) {
-                var el = document.querySelector('[data-index="' + appState.selectedLineIndex + '"]');
-                if (el) updateLine(appState.selectedLineIndex, el);
+            if (view === 'week') {
+                document.getElementById('weekView').classList.add('active');
+                document.getElementById('weekViewBtn').classList.add('active');
+                document.getElementById('printWeekBtn').style.display = 'block';
+                document.getElementById('printMonthBtn').style.display = 'none';
+            } else {
+                document.getElementById('monthView').classList.add('active');
+                document.getElementById('monthViewBtn').classList.add('active');
+                document.getElementById('printWeekBtn').style.display = 'none';
+                document.getElementById('printMonthBtn').style.display = 'block';
             }
+            render();
         }
 
-        // ========== ARMAZENAMENTO ==========
-        function saveData() { localStorage.setItem('plannerData', JSON.stringify(appState.days)); }
-        function loadData() {
-            var stored = localStorage.getItem('plannerData');
-            if (stored) appState.days = JSON.parse(stored);
+        function changeDate(days) {
+            if (appState.view === 'week') {
+                appState.currentDate.setDate(appState.currentDate.getDate() + (days * 7));
+            } else {
+                appState.currentDate.setMonth(appState.currentDate.getMonth() + days);
+            }
+            render();
         }
 
-        // ========== RENDERIZAÇÃO ==========
+        function goToToday() {
+            appState.currentDate = new Date();
+            render();
+        }
+
+        function render() {
+            if (appState.view === 'week') renderWeekView();
+            else renderMonthView();
+            saveToStorage();
+        }
+
         function renderWeekView() {
-            var weekGrid = document.getElementById('weekGrid');
-            if (!weekGrid) return;
-            weekGrid.innerHTML = '';
-
-            var startDate = new Date(appState.currentDate);
-            var dayOfWeek = appState.currentDate.getDay();
-            // Ajustar para começar na Segunda-feira (1) e terminar no Domingo (0)
-            var daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            startDate.setDate(appState.currentDate.getDate() - daysToSubtract);
-
-            document.getElementById('headerTitle').textContent = startDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).toUpperCase();
-
-            // O grid agora é unificado e controlado via CSS
-
-            for (var i = 0; i < 7; i++) {
-                var date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                
-                // Card unificado (usará classes CSS para alternar entre tela e impressão)
-                var card = createDayCard(date);
-                weekGrid.appendChild(card);
-            }
+            const grid = document.getElementById('weekGrid');
+            grid.innerHTML = '';
             
-            document.getElementById('weekView').style.display = 'flex';
-            document.getElementById('monthView').style.display = 'none';
-            document.getElementById('viewWeekly').classList.add('active');
-            document.getElementById('viewMonthly').classList.remove('active');
-            document.getElementById('exportPdfBtn').style.display = 'inline-block'; // Habilitar PDF na semana
+            const startOfWeek = new Date(appState.currentDate);
+            const day = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+            startOfWeek.setDate(diff);
+
+            const monthTitle = startOfWeek.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+            document.getElementById('headerTitle').textContent = monthTitle;
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                grid.appendChild(createDayCard(date));
+            }
         }
 
         function createDayCard(date) {
-            var card = document.createElement('div');
-            var dateStr = getDateString(date);
-            var isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            var isHoliday = isHolidayDate(date);
-            var isSpecial = isWeekend || isHoliday;
+            const dateStr = date.toISOString().split('T')[0];
+            const dayData = appState.data[dateStr] || { lines: Array(30).fill({text:''}) };
             
-            card.className = 'day-card-grid' + (isSpecial ? ' special-day' : '');
+            const card = document.createElement('div');
+            card.className = 'day-card-grid';
             
-            // Cabeçalho para tela
-            var header = document.createElement('div');
-            header.className = 'day-card-header no-print' + (isSpecial ? ' special-day' : '');
-            var dayNameShort = getDayName(date.getDay()).split('-')[0].toUpperCase();
-            header.innerHTML = '<span class="day-name-label">' + dayNameShort + ' ' + date.getDate() + '</span>';
+            const header = document.createElement('div');
+            header.className = 'day-card-header';
+            const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+            header.innerHTML = `<strong>${date.getDate()}</strong> - ${dayName}`;
             
-            // Cabeçalho para impressão (conforme modelo)
-            var printHeader = document.createElement('div');
-            printHeader.className = 'print-only day-print-header';
-            var day = String(date.getDate()).padStart(2, '0');
-            var month = String(date.getMonth() + 1).padStart(2, '0');
-            var year = date.getFullYear();
-            // Garantindo que a data e o dia da semana apareçam na mesma linha ou blocos visíveis
-            printHeader.innerHTML = '<div class="print-header-content">' +
-                                   '<span class="print-date">' + day + '/' + month + '/' + year + '</span>' +
-                                   '<span class="print-day-name"> - ' + getDayName(date.getDay()) + '</span>' +
-                                   '</div>' +
-                                   '<hr class="print-divider">';
+            const printHeader = document.createElement('div');
+            printHeader.className = 'print-only day-print-header-weekly';
+            printHeader.innerHTML = `<strong>${date.getDate()}/${date.getMonth()+1}</strong><br>${dayName}`;
 
-            var content = document.createElement('div');
+            const content = document.createElement('div');
             content.className = 'day-card-content';
             
-            var dayData = appState.days[dateStr] || { lines: [] };
-            var hasAnyContent = false;
-            
-            // Container para colunas de impressão (unificado em uma coluna por dia para a semana)
-            var printCols = document.createElement('div');
+            const printCols = document.createElement('div');
             printCols.className = 'print-only day-print-columns';
-            var pCol1 = document.createElement('div'); pCol1.className = 'print-col';
+            const pCol1 = document.createElement('div'); pCol1.className = 'print-col';
             printCols.appendChild(pCol1);
 
-            var contentLines = [];
-            for (var i = 0; i < 30; i++) {
-                var line = dayData.lines[i] || { text: '' };
-                var hasContent = !!(line.text || line.html);
+            let hasAnyContent = false;
+            let contentLines = [];
+            for (let i = 0; i < 30; i++) {
+                const line = dayData.lines[i] || { text: '' };
+                const hasContent = !!(line.text || line.html);
                 if (hasContent) {
                     hasAnyContent = true;
                     contentLines.push({ index: i + 1, data: line });
                 }
                 
-                // Renderizar para tela (apenas as primeiras 10 linhas visíveis por padrão)
-                var lineWrap = document.createElement('div');
+                // Tela: 10 linhas visíveis
+                const lineWrap = document.createElement('div');
                 lineWrap.className = 'day-line-wrapper no-print' + (hasContent ? ' has-content' : ' empty-line');
-                if (i >= 10) lineWrap.style.display = 'none'; // Ocultar linhas além da 10ª na tela
-                
-                lineWrap.innerHTML = '<span class="line-number-preview" style="color:#bbb;">' + (i+1) + '.</span><div class="day-line-preview">' + (line.html || line.text || '&nbsp;') + '</div>';
+                if (i >= 10) lineWrap.style.display = 'none';
+                lineWrap.innerHTML = `<span class="line-number-preview" style="color:#bbb;">${i+1}.</span><div class="day-line-preview">${line.html || line.text || '&nbsp;'}</div>`;
                 content.appendChild(lineWrap);
             }
 
-            // Distribuir em 3 colunas para impressão (Regra: 10 linhas por coluna)
-            if (hasAnyContent) {
-                var totalChars = contentLines.reduce(function(acc, curr) { 
-                    return acc + (curr.data.text || curr.data.html || "").length; 
-                }, 0);
+            // Impressão Semanal: 30 linhas
+            const totalChars = contentLines.reduce((acc, curr) => acc + (curr.data.text || curr.data.html || "").length, 0);
+            let fontSize = 7;
+            if (totalChars > 1500) fontSize = 4;
+            else if (totalChars > 1000) fontSize = 5;
+            else if (totalChars > 500) fontSize = 6;
 
-                var fontSize = 8;
-                if (totalChars > 1000 || contentLines.length > 25) fontSize = 5;
-                else if (totalChars > 600 || contentLines.length > 20) fontSize = 6;
-                else if (totalChars > 300 || contentLines.length > 15) fontSize = 7;
-
-                contentLines.forEach(function(item, idx) {
-                    var pWrap = document.createElement('div');
-                    pWrap.className = 'day-line-wrapper has-content';
-                    pWrap.style.marginBottom = '1px';
-                    pWrap.style.borderBottom = '0.5px dotted #ddd';
-                    pWrap.innerHTML = '<span class="line-number-preview" style="color:#bbb; font-size:' + (fontSize-1) + 'px; width: 10px;">' + item.index + '.</span>' +
-                                     '<div class="day-line-preview" style="font-size:' + fontSize + 'px; word-break: break-all; line-height: 1.1;">' + (item.data.html || item.data.text) + '</div>';
-                    
-                    pCol1.appendChild(pWrap);
-                });
-                content.appendChild(printCols);
+            for (let j = 0; j < 30; j++) {
+                const lineData = dayData.lines[j] || { text: '' };
+                const hasLineContent = !!(lineData.text || lineData.html);
+                const pWrap = document.createElement('div');
+                pWrap.className = 'day-line-wrapper print-line' + (hasLineContent ? ' has-content' : ' empty-line');
+                pWrap.style.cssText = `border-bottom: 0.1px solid #eee; display: flex; align-items: flex-start; padding: 0.5px 0; font-size: ${fontSize}px;`;
+                pWrap.innerHTML = `<span class="line-number-preview" style="font-size: ${fontSize*0.8}px; width: 12px; flex-shrink: 0;">${j+1}.</span><div class="day-line-preview" style="flex: 1; word-break: break-all;">${lineData.html || lineData.text || '&nbsp;'}</div>`;
+                pCol1.appendChild(pWrap);
             }
-
-            if (!hasAnyContent) {
-                var noContentMsg = document.createElement('div');
-                noContentMsg.className = 'print-only no-content-msg';
-                noContentMsg.textContent = 'Sem anotações';
-                content.appendChild(noContentMsg);
-            }
+            content.appendChild(printCols);
 
             card.appendChild(header);
             card.appendChild(printHeader);
             card.appendChild(content);
-            card.onclick = function() { openDayEdit(date); };
+            card.onclick = () => openDayEdit(date);
             return card;
         }
 
         function renderMonthView() {
-            var monthCalendar = document.getElementById('monthCalendar');
-            monthCalendar.innerHTML = '';
-            var monthTitle = appState.currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+            const grid = document.getElementById('monthGrid');
+            grid.innerHTML = '';
+            const date = new Date(appState.currentDate);
+            date.setDate(1);
+            const monthTitle = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
             document.getElementById('headerTitle').textContent = monthTitle;
             document.getElementById('monthPrintTitle').textContent = monthTitle;
 
-            var grid = document.createElement('div'); grid.className = 'month-grid';
-            // Layout conforme imagem: Segunda a Sábado em uma linha, Domingo separado ou ao final
-            // O modelo mostra Segunda, Terça, Quarta, Quinta, Sexta, Sábado e Domingo por último
-            var dayNames = ['SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO', 'DOMINGO'];
-            dayNames.forEach(function(d) {
-                var h = document.createElement('div'); 
-                h.className = 'month-day-header' + (d === 'SÁBADO' || d === 'DOMINGO' ? ' special-day' : ''); 
-                h.textContent = d; 
-                grid.appendChild(h);
-            });
+            const firstDay = (date.getDay() + 6) % 7;
+            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-            var firstDay = new Date(appState.currentDate.getFullYear(), appState.currentDate.getMonth(), 1);
-            var startDayOfWeek = firstDay.getDay();
-            var diff = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
-            var start = new Date(firstDay); 
-            start.setDate(firstDay.getDate() - diff);
-
-            // Calcular o número de semanas necessárias (5 ou 6)
-            var lastDayOfMonth = new Date(appState.currentDate.getFullYear(), appState.currentDate.getMonth() + 1, 0);
-            var totalDaysNeeded = diff + lastDayOfMonth.getDate();
-            var totalCells = Math.ceil(totalDaysNeeded / 7) * 7;
-            var numRows = totalCells / 7;
-            grid.style.gridTemplateRows = '35px repeat(' + numRows + ', 1fr)';
-
-            for (var i = 0; i < totalCells; i++) {
-                var date = new Date(start); 
-                date.setDate(start.getDate() + i);
-                grid.appendChild(createMonthCell(date));
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'month-day-cell empty';
+                grid.appendChild(empty);
             }
 
-            monthCalendar.appendChild(grid);
-            document.getElementById('weekView').style.display = 'none';
-            document.getElementById('monthView').style.display = 'flex';
-            document.getElementById('viewWeekly').classList.remove('active');
-            document.getElementById('viewMonthly').classList.add('active');
-            document.getElementById('exportPdfBtn').style.display = 'inline-block';
+            for (let i = 1; i <= lastDay; i++) {
+                const cellDate = new Date(date.getFullYear(), date.getMonth(), i);
+                grid.appendChild(createMonthCell(cellDate));
+            }
         }
 
         function createMonthCell(date) {
-            var cell = document.createElement('div');
-            var isOther = date.getMonth() !== appState.currentDate.getMonth();
+            const dateStr = date.toISOString().split('T')[0];
+            const dayData = appState.data[dateStr];
+            const cell = document.createElement('div');
+            cell.className = 'month-day-cell';
+            if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add('weekend');
             
-            if (isOther) {
-                cell.className = 'month-day-cell other-month';
-                cell.innerHTML = '&nbsp;';
-                return cell;
-            }
-            
-            var isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            var isHoliday = isHolidayDate(date);
-            var isSpecial = isWeekend || isHoliday;
-            
-            cell.className = 'month-day-cell' + (isSpecial ? ' special-day' : '');
-            
-            var dateStr = getDateString(date);
-            var dayData = appState.days[dateStr];
-            var html = '<div class="month-day-num-container"><div class="month-day-num">' + date.getDate() + '</div></div>';
-            
+            let html = `<div class="month-day-num-container"><span class="month-day-num">${date.getDate()}</span></div>`;
             html += '<div class="month-cell-content">';
+            
             if (dayData && dayData.lines) {
-                var contentLines = [];
-                dayData.lines.forEach(function(l, idx) {
-                    if (l && (l.text || l.html)) {
-                        contentLines.push({ index: idx + 1, data: l });
-                    }
-                });
+                const contentLines = [];
+                dayData.lines.forEach((l, idx) => { if (l && (l.text || l.html)) contentLines.push({ index: idx + 1, data: l }); });
 
-                // Lógica unificada para Tela e Impressão (3 Colunas de 10 linhas cada)
-                // Usamos um sistema de colunas com larguras fixas em % para evitar sobreposição
                 html += '<div class="month-content-wrapper" style="display: table; width: 100%; height: 100%; table-layout: fixed; border-collapse: collapse;">';
-                
-                var pCol1 = '<div class="month-col col-1" style="display: table-cell; width: 33.33%; vertical-align: top;">';
-                var pCol2 = '<div class="month-col col-2" style="display: table-cell; width: 33.33%; vertical-align: top; border-left: 0.1px solid #eee;">';
-                var pCol3 = '<div class="month-col col-3" style="display: table-cell; width: 33.33%; vertical-align: top; border-left: 0.1px solid #eee;">';
-                
-                // Calcular fonte baseada no volume total de texto
-                var totalChars = contentLines.reduce(function(acc, curr) { 
-                    return acc + (curr.data.text || curr.data.html || "").length; 
-                }, 0);
-                
-                // Ajuste de fonte ultra-agressivo para garantir que TUDO caiba
-                var fontSize = 6;
+                const cols = ['', '', ''];
+                const totalChars = contentLines.reduce((acc, curr) => acc + (curr.data.text || curr.data.html || "").length, 0);
+                let fontSize = 6;
                 if (totalChars > 1000) fontSize = 2.5;
                 else if (totalChars > 700) fontSize = 3;
                 else if (totalChars > 500) fontSize = 3.5;
                 else if (totalChars > 300) fontSize = 4.5;
                 else if (totalChars > 150) fontSize = 5.5;
 
-                for (var lineIdx = 1; lineIdx <= 30; lineIdx++) {
-                    var lineData = dayData.lines[lineIdx-1];
-                    var hasContent = lineData && (lineData.text || lineData.html);
-                    var lineClass = hasContent ? 'month-line-rich has-content' : 'month-line-rich empty-line';
-                    var cleanHtml = hasContent ? (lineData.html || lineData.text).replace(/font-size:[^;"]+;?/g, '') : '&nbsp;';
+                for (let lineIdx = 1; lineIdx <= 30; lineIdx++) {
+                    const lineData = dayData.lines[lineIdx-1];
+                    const hasContent = lineData && (lineData.text || lineData.html);
+                    const lineClass = hasContent ? 'month-line-rich has-content' : 'month-line-rich empty-line';
+                    const cleanHtml = hasContent ? (lineData.html || lineData.text).replace(/font-size:[^;"]+;?/g, '') : '&nbsp;';
+                    const lineHtml = `<div class="${lineClass}" style="font-size:${fontSize}px; border-bottom: 0.05px solid #eee; line-height: 1; word-break: break-all; white-space: normal; display: flex; align-items: flex-start; padding: 0.2px 0; min-height: 1.1em;"><span class="line-num-label" style="color:#ccc; font-size: 0.7em; width: 7px; flex-shrink: 0; margin-right: 0.5px;">${lineIdx}.</span><div class="line-text-content" style="flex: 1; min-width: 0; overflow: visible;">${cleanHtml}</div></div>`;
                     
-                    // Removido height fixo para permitir que o texto quebre e apareça todo
-                    var lineHtml = '<div class="' + lineClass + '" style="font-size:' + fontSize + 'px; border-bottom: 0.05px solid #eee; line-height: 1; word-break: break-all; white-space: normal; display: flex; align-items: flex-start; padding: 0.2px 0; min-height: 1.1em;">' +
-                                   '<span class="line-num-label" style="color:#ccc; font-size: 0.7em; width: 7px; flex-shrink: 0; margin-right: 0.5px;">' + lineIdx + '.</span> ' +
-                                   '<div class="line-text-content" style="flex: 1; min-width: 0; overflow: visible;">' + cleanHtml + '</div></div>';
-                    
-                    if (lineIdx <= 10) pCol1 += lineHtml;
-                    else if (lineIdx <= 20) pCol2 += lineHtml;
-                    else pCol3 += lineHtml;
+                    if (lineIdx <= 10) cols[0] += lineHtml;
+                    else if (lineIdx <= 20) cols[1] += lineHtml;
+                    else cols[2] += lineHtml;
                 }
-                
-                pCol1 += '</div>'; pCol2 += '</div>'; pCol3 += '</div>';
-                html += pCol1 + pCol2 + pCol3 + '</div>';
+                html += `<div class="month-col col-1" style="display: table-cell; width: 33.33%; vertical-align: top;">${cols[0]}</div>`;
+                html += `<div class="month-col col-2" style="display: table-cell; width: 33.33%; vertical-align: top; border-left: 0.1px solid #eee;">${cols[1]}</div>`;
+                html += `<div class="month-col col-3" style="display: table-cell; width: 33.33%; vertical-align: top; border-left: 0.1px solid #eee;">${cols[2]}</div>`;
+                html += '</div>';
             }
             html += '</div>';
-            
             cell.innerHTML = html;
-            cell.onclick = function() { openDayEdit(new Date(date)); };
+            cell.onclick = () => openDayEdit(date);
             return cell;
         }
 
         function openDayEdit(date) {
-            // Garantir que a data seja tratada corretamente
-            var targetDate = new Date(date);
-            appState.selectedDay = getDateString(targetDate);
-            var dayData = appState.days[appState.selectedDay] || { lines: [] };
-            document.getElementById('editDayInfo').textContent = getDayName(targetDate.getDay()) + ', ' + targetDate.getDate();
+            appState.selectedDate = date;
+            const dateStr = date.toISOString().split('T')[0];
+            const dayData = appState.data[dateStr] || { lines: Array(30).fill({text:''}) };
             
-            // Atualizar cabeçalho de impressão com a data correta do dia selecionado
-            var day = String(targetDate.getDate()).padStart(2, '0');
-            var month = String(targetDate.getMonth() + 1).padStart(2, '0');
-            var year = targetDate.getFullYear();
-            document.getElementById('printDate').textContent = day + '/' + month + '/' + year;
-            document.getElementById('printDayName').textContent = getDayName(targetDate.getDay());
-
-            var notebook = document.getElementById('notebookLines');
-            document.body.classList.add('editing-day');
+            document.getElementById('modalDateTitle').textContent = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', weekday: 'long' });
+            const notebook = document.getElementById('notebook');
             notebook.innerHTML = '';
-            
-            // Container para colunas de impressão diária
-            var printColumns = document.createElement('div');
-            printColumns.className = 'print-only day-print-columns';
-            var col1 = document.createElement('div'); col1.className = 'print-col';
-            var col2 = document.createElement('div'); col2.className = 'print-col';
-            var col3 = document.createElement('div'); col3.className = 'print-col';
-            printColumns.appendChild(col1);
-            printColumns.appendChild(col2);
-            printColumns.appendChild(col3);
-            
-            var contentLines = [];
-            for (var i = 0; i < 30; i++) {
-                var lineData = dayData.lines[i] || { text: '' };
-                var hasContent = !!(lineData.text || lineData.html);
-                if (hasContent) contentLines.push({ index: i + 1, data: lineData });
 
-                // Renderizar para tela (comportamento original)
-                var wrap = document.createElement('div');
-                wrap.className = 'notebook-line-wrapper no-print' + (hasContent ? ' has-content' : ' empty-line');
-                var line = document.createElement('div');
+            for (let i = 0; i < 30; i++) {
+                const wrap = document.createElement('div');
+                wrap.className = 'notebook-line-wrapper';
+                const lineData = dayData.lines[i] || { text: '' };
+                
+                const line = document.createElement('div');
                 line.className = 'notebook-line';
                 line.contentEditable = true;
                 line.setAttribute('data-index', i);
@@ -463,235 +322,73 @@
                 };
                 line.onfocus = function() { appState.selectedLineIndex = parseInt(this.getAttribute('data-index')); };
                 
-                if (hasContent) {
-                    setTimeout((function(el) {
-                        return function() { adjustFontSize(el, 24); };
-                    })(line), 0);
-                }
-                
                 line.onkeydown = function(e) {
-                    var idx = parseInt(this.getAttribute('data-index'));
                     if (e.key === 'Enter' || e.key === 'Tab') {
                         e.preventDefault();
-                        var nextIdx = idx + 1;
+                        const nextIdx = parseInt(this.getAttribute('data-index')) + 1;
                         if (nextIdx < 30) {
-                            var nextEl = document.querySelector('[data-index="' + nextIdx + '"]');
+                            const nextEl = document.querySelector(`[data-index="${nextIdx}"]`);
                             if (nextEl) nextEl.focus();
                         }
                     }
                 };
                 
-                wrap.innerHTML = '<div class="line-number">' + (i+1) + '.</div>';
+                wrap.innerHTML = `<div class="line-number">${i+1}.</div>`;
                 wrap.appendChild(line);
                 notebook.appendChild(wrap);
+                if (line.innerHTML) setTimeout(() => adjustFontSize(line, 24), 0);
             }
-
-            // Renderizar para impressão diária (colunas se > 10 linhas)
-            if (contentLines.length > 0) {
-                var numCols = 1;
-                if (contentLines.length > 20) numCols = 3;
-                else if (contentLines.length > 10) numCols = 2;
-
-                contentLines.forEach(function(item, idx) {
-                    var lineWrap = document.createElement('div');
-                    lineWrap.className = 'notebook-line-wrapper has-content';
-                    lineWrap.innerHTML = '<div class="line-number">' + item.index + '.</div><div class="notebook-line">' + (item.data.html || item.data.text) + '</div>';
-                    
-                    var colIdx = idx % numCols;
-                    if (colIdx === 0) col1.appendChild(lineWrap);
-                    else if (colIdx === 1) col2.appendChild(lineWrap);
-                    else col3.appendChild(lineWrap);
-
-                    var lineEl = lineWrap.querySelector('.notebook-line');
-                    setTimeout((function(el) {
-                        return function() { adjustFontSize(el, 24); };
-                    })(lineEl), 0);
-                });
-                notebook.appendChild(printColumns);
-            }
-
-            document.getElementById('dayEditView').style.display = 'flex';
-            document.getElementById('mainView').style.display = 'none';
-            renderColorPalette();
+            document.getElementById('editModal').style.display = 'flex';
         }
 
-        function adjustFontSize(element, maxHeight) {
-            var fontSize = 16; // Tamanho inicial para edição diária
-            if (element.classList.contains('day-line-preview')) fontSize = 10; // Tamanho inicial para semanal
-            
-            element.style.fontSize = fontSize + 'px';
-            while (element.scrollHeight > maxHeight && fontSize > 6) {
-                fontSize -= 0.5;
-                element.style.fontSize = fontSize + 'px';
+        function updateLine(index, element) {
+            const dateStr = appState.selectedDate.toISOString().split('T')[0];
+            if (!appState.data[dateStr]) appState.data[dateStr] = { lines: Array(30).fill({text:''}) };
+            appState.data[dateStr].lines[index] = { text: element.innerText, html: element.innerHTML };
+            saveToStorage();
+        }
+
+        function adjustFontSize(el, max) {
+            let size = max;
+            el.style.fontSize = size + 'px';
+            while (el.scrollHeight > el.offsetHeight && size > 8) {
+                size--;
+                el.style.fontSize = size + 'px';
             }
         }
 
-        function updateLine(idx, el) {
-            if (!appState.days[appState.selectedDay]) appState.days[appState.selectedDay] = { lines: [] };
-            appState.days[appState.selectedDay].lines[idx] = { text: el.innerText, html: el.innerHTML };
-            
-            // Atualizar classe has-content no wrapper para impressão
-            var wrap = el.parentElement;
-            if (wrap && wrap.classList.contains('notebook-line-wrapper')) {
-                if (el.innerText.trim() !== '' || el.innerHTML.trim() !== '') {
-                    wrap.classList.add('has-content');
-                    wrap.classList.remove('empty-line');
-                } else {
-                    wrap.classList.remove('has-content');
-                    wrap.classList.add('empty-line');
-                }
+        function formatText(cmd, val) {
+            document.execCommand(cmd, false, val);
+            const active = document.activeElement;
+            if (active && active.classList.contains('notebook-line')) {
+                updateLine(active.getAttribute('data-index'), active);
             }
-            saveData();
         }
 
-        function renderColorPalette() {
-            var p = document.getElementById('colorPalette'); p.innerHTML = '';
-            COLORS.forEach(function(c, i) {
-                var b = document.createElement('button'); b.className = 'color-btn'; b.style.backgroundColor = c;
-                b.onclick = function() {
-                    formatDoc('hiliteColor', c);
-                };
-                p.appendChild(b);
-            });
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            render();
         }
 
-        function closeDayEdit() {
-            document.getElementById('dayEditView').style.display = 'none';
-            document.getElementById('mainView').style.display = 'flex';
-            document.body.classList.remove('editing-day');
-            renderWeekView();
+        function printWeekly() {
+            document.body.className = 'print-weekly-landscape';
+            window.print();
+            document.body.className = '';
         }
 
-        function exportToPdf() {
-            var element = appState.view === 'week' ? document.getElementById('weekView') : document.getElementById('monthView');
-            var header = document.querySelector('.header');
-            var controls = document.querySelector('.view-controls');
-            
-            // Forçar dimensões de paisagem para o PDF
-            var isWeek = appState.view === 'week';
-            element.style.width = isWeek ? '297mm' : '420mm'; // A3 para o mês
-            element.style.height = isWeek ? '210mm' : '297mm';
-
-            var filename = (isWeek ? 'semana-' : 'calendario-') + 
-                           appState.currentDate.getFullYear() + '-' + (appState.currentDate.getMonth()+1) + '.pdf';
-
-            var opt = {
-                margin: 0,
-                filename: filename,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    logging: false, 
-                    letterRendering: true,
-                    windowWidth: isWeek ? 1122 : 1587,
-                    windowHeight: isWeek ? 794 : 1123
-                },
-                jsPDF: { unit: 'mm', format: isWeek ? 'a4' : 'a3', orientation: 'landscape', compress: true }
-            };
-            
-            // Adicionar classes de impressão
-            document.body.classList.add('print-mode');
-            if (isWeek) document.body.classList.add('print-weekly-landscape');
-            else document.body.classList.add('print-monthly-landscape');
-            
-            // Ocultar elementos desnecessários
-            if(header) header.style.display = 'none';
-            if(controls) controls.style.display = 'none';
-            
-            html2pdf().set(opt).from(element).save().then(function() {
-                // Restaurar
-                document.body.classList.remove('print-mode');
-                document.body.classList.remove('print-weekly-landscape');
-                document.body.classList.remove('print-monthly-landscape');
-                
-                element.style.width = '';
-                element.style.height = '';
-                if(header) header.style.display = 'flex';
-                if(controls) controls.style.display = 'flex';
-            });
+        function printMonthly() {
+            document.body.className = 'print-monthly-landscape';
+            window.print();
+            document.body.className = '';
         }
 
-        // ========== INICIALIZAÇÃO ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-            renderWeekView();
-            document.getElementById('prevNav').onclick = function() {
-                if (appState.view === 'week') appState.currentDate.setDate(appState.currentDate.getDate() - 7);
-                else appState.currentDate.setMonth(appState.currentDate.getMonth() - 1);
-                appState.view === 'week' ? renderWeekView() : renderMonthView();
-            };
-            document.getElementById('nextNav').onclick = function() {
-                if (appState.view === 'week') appState.currentDate.setDate(appState.currentDate.getDate() + 7);
-                else appState.currentDate.setMonth(appState.currentDate.getMonth() + 1);
-                appState.view === 'week' ? renderWeekView() : renderMonthView();
-            };
-            document.getElementById('viewWeekly').onclick = function() { appState.view = 'week'; renderWeekView(); };
-            document.getElementById('viewMonthly').onclick = function() { appState.view = 'month'; renderMonthView(); };
-            document.getElementById('closeDayEdit').onclick = closeDayEdit;
-            document.getElementById('exportPdfBtn').onclick = exportToPdf;
-            
-            document.getElementById('printWeekBtn').onclick = function() {
-                appState.view = 'week';
-                renderWeekView();
-                document.body.classList.add('print-weekly-landscape');
-                setTimeout(function() { 
-                    window.print(); 
-                    document.body.classList.remove('print-weekly-landscape');
-                }, 500);
-            };
-            
-            document.getElementById('printMonthBtn').onclick = function() {
-                appState.view = 'month';
-                renderMonthView();
-                document.body.classList.add('print-monthly-landscape');
-                setTimeout(function() { 
-                    window.print(); 
-                    document.body.classList.remove('print-monthly-landscape');
-                }, 500);
-            };
-            
-            document.getElementById('printDay').onclick = function() {
-                window.print();
-            };
+        function printDaily() {
+            document.body.className = 'print-daily-portrait';
+            window.print();
+            document.body.className = '';
+        }
 
-            // ========== LÓGICA DE BACKUP (EXPORTAR/IMPORTAR) ==========
-            document.getElementById('exportDataBtn').onclick = function() {
-                var dataStr = JSON.stringify(appState.days, null, 2);
-                var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                
-                var exportFileDefaultName = 'backup-planejador-' + new Date().toISOString().slice(0,10) + '.json';
-                
-                var linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-            };
-
-            document.getElementById('importDataBtn').onclick = function() {
-                document.getElementById('importFile').click();
-            };
-
-            document.getElementById('importFile').onchange = function(event) {
-                var file = event.target.files[0];
-                if (!file) return;
-                
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        var importedData = JSON.parse(e.target.result);
-                        if (confirm('Isso irá substituir todas as suas anotações atuais. Deseja continuar?')) {
-                            appState.days = importedData;
-                            saveData();
-                            location.reload();
-                        }
-                    } catch (err) {
-                        alert('Erro ao importar arquivo: ' + err.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-        });
+        init();
     </script>
 </body>
 </html>
