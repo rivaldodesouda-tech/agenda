@@ -259,10 +259,10 @@
                     return acc + (curr.data.text || curr.data.html || "").length; 
                 }, 0);
 
-                var fontSize = 8;
-                if (totalChars > 1000 || contentLines.length > 25) fontSize = 5;
-                else if (totalChars > 600 || contentLines.length > 20) fontSize = 6;
-                else if (totalChars > 300 || contentLines.length > 15) fontSize = 7;
+                var fontSize = 10;
+                if (totalChars > 1000 || contentLines.length > 25) fontSize = 8;
+                else if (totalChars > 600 || contentLines.length > 20) fontSize = 8.5;
+                else if (totalChars > 300 || contentLines.length > 15) fontSize = 9;
 
                 contentLines.forEach(function(item, idx) {
                     var pWrap = document.createElement('div');
@@ -385,10 +385,10 @@
                     return acc + (curr.data.text || curr.data.html || "").length; 
                 }, 0);
                 
-                var fontSize = 6;
-                if (totalChars > 600 || contentLines.length > 25) fontSize = 3;
-                else if (totalChars > 400 || contentLines.length > 20) fontSize = 4;
-                else if (totalChars > 200 || contentLines.length > 12) fontSize = 5;
+                var fontSize = 10;
+                if (totalChars > 600 || contentLines.length > 25) fontSize = 8;
+                else if (totalChars > 400 || contentLines.length > 20) fontSize = 8.5;
+                else if (totalChars > 200 || contentLines.length > 12) fontSize = 9;
 
                 // Criar as 30 linhas (mesmo as vazias para manter o grid se necessário, ou apenas as com conteúdo)
                 // O usuário pediu 30 linhas distribuídas em 3 colunas

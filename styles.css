@@ -694,19 +694,19 @@ body {
     }
 
     .line-number-preview {
-        font-size: 6.5px !important;
-        width: 12px !important;
+        font-size: 8px !important;
+        width: 15px !important;
         color: #888 !important;
         flex-shrink: 0 !important;
     }
 
     .day-line-preview {
-        font-size: 6px;
-        line-height: 1.1 !important;
+        font-size: 9px;
+        line-height: 1.2 !important;
         word-break: break-word !important;
         color: inherit !important;
         overflow: visible !important;
-        white-space: normal !important; /* Permitir quebra de linha para não perder conteúdo */
+        white-space: normal !important;
     }
 
     /* ========== 2. IMPRESSÃO DIÁRIA (Individual) ========== */
@@ -799,10 +799,10 @@ body {
     }
 
     body.print-monthly-landscape .month-day-num {
-        font-size: 10px !important;
-        width: 18px !important;
-        height: 18px !important;
-        line-height: 18px !important;
+        font-size: 12px !important;
+        width: 20px !important;
+        height: 20px !important;
+        line-height: 20px !important;
         margin-bottom: 0 !important;
     }
     
