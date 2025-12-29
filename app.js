@@ -81,6 +81,7 @@ function initializeEventListeners() {
         if (appState.view !== 'week') {
             appState.view = 'week';
             renderWeekView();
+            document.getElementById('exportPdfBtn').style.display = 'none';
         }
     });
 
@@ -88,11 +89,18 @@ function initializeEventListeners() {
         if (appState.view !== 'month') {
             appState.view = 'month';
             renderMonthView();
+            document.getElementById('exportPdfBtn').style.display = 'inline-block';
         }
     });
 
     document.getElementById('printWeekBtn').addEventListener('click', function() {
+        var weekGrid = document.getElementById('weekGrid');
+        weekGrid.classList.add('print-mode');
         window.print();
+        // Pequeno delay para remover a classe após o diálogo de impressão abrir
+        setTimeout(function() {
+            weekGrid.classList.remove('print-mode');
+        }, 1000);
     });
 
     document.getElementById('printDay').addEventListener('click', function() {
@@ -100,7 +108,11 @@ function initializeEventListeners() {
     });
 
     document.getElementById('printMonthBtn').addEventListener('click', function() {
-        printMonthlyView();
+        window.print();
+    });
+
+    document.getElementById('exportPdfBtn').addEventListener('click', function() {
+        exportMonthToPdf();
     });
 
     document.getElementById('closeDayEdit').addEventListener('click', function() {
@@ -290,13 +302,19 @@ function createMonthDayCell(date) {
     var dateStr = getDateString(date);
     var dayData = appState.days[dateStr];
     var html = '<div class="month-day-num">' + date.getDate() + '</div>';
-    html += '<div class="month-day-content">';
-    if (dayData && dayData.lines) {
-        dayData.lines.forEach(function(line) {
-            if (line && (line.text || line.html) && (line.text || "").trim() !== '') {
-                html += '<div class="month-line-preview">' + renderLineWithColors(line) + '</div>';
+    html += '<div class="month-cell-content">';
+    var lines = (dayData && dayData.lines) ? dayData.lines : [];
+    for (var col = 0; col < 3; col++) {
+        html += '<div class="month-column-part">';
+        for (var row = 0; row < 10; row++) {
+            var i = col * 10 + row;
+            var line = lines[i];
+            var content = (line && (line.text || line.html)) ? renderLineWithColors(line) : '';
+            if (content.replace(/<[^>]*>/g, '').trim().length > 0) {
+                html += '<div class="month-line-rich">' + (i+1) + '. ' + content + '</div>';
             }
-        });
+        }
+        html += '</div>';
     }
     html += '</div>';
     cell.innerHTML = html;
@@ -309,7 +327,8 @@ function createMonthDayCell(date) {
 }
 
 function openDayEdit(date) {
-    appState.selectedDay = getDateString(date);
+    appState.selectedDay = (typeof date === 'string') ? date : getDateString(date);
+    var dateObj = (typeof date === 'string') ? new Date(date + 'T00:00:00') : date;
     var dayData = appState.days[appState.selectedDay] || { lines: [] };
     if (!dayData.lines || dayData.lines.length === 0) {
         dayData.lines = Array(30).fill(null).map(function() { return { text: '', spans: [] }; });
@@ -317,7 +336,7 @@ function openDayEdit(date) {
 
     var editView = document.getElementById('dayEditView');
     var info = document.getElementById('editDayInfo');
-    info.textContent = getDayName(date.getDay()) + ', ' + date.getDate() + ' de ' + date.toLocaleDateString('pt-BR', { month: 'long' });
+    info.textContent = getDayName(dateObj.getDay()) + ', ' + dateObj.getDate() + ' de ' + dateObj.toLocaleDateString('pt-BR', { month: 'long' });
     
     var notebook = document.getElementById('notebookLines');
     notebook.innerHTML = '';
@@ -445,20 +464,81 @@ function renderLineWithColors(lineData) {
     return '';
 }
 
-function printMonthlyView() {
-    // Garantir que estamos na visão mensal
-    if (appState.view !== 'month') {
-        appState.view = 'month';
-        renderMonthView();
-    }
+function exportMonthToPdf() {
+    var element = document.getElementById('monthView');
+    var monthTitle = document.getElementById('headerTitle').textContent;
     
-    // Adicionar classe para impressão mensal paisagem
-    document.body.classList.add('print-monthly-landscape');
+    // Preparar para exportação
+    var printHeader = document.getElementById('monthPrintHeader');
+    var printTitle = document.getElementById('monthPrintTitle');
+    printHeader.style.display = 'block';
+    printTitle.textContent = monthTitle;
     
-    // Pequeno delay para garantir a renderização e o estilo
-    setTimeout(function() {
-        window.print();
-        // Remover a classe após a impressão (ou cancelamento)
-        document.body.classList.remove('print-monthly-landscape');
-    }, 500);
+    // Injetar estilos temporários para o PDF ocupar a página inteira
+    var style = document.createElement('style');
+    style.id = 'pdf-temp-style';
+    style.innerHTML = `
+        .month-view.print-mode {
+            width: 297mm !important;
+            height: 210mm !important;
+            padding: 5mm !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background: white !important;
+        }
+        .month-view.print-mode .month-calendar {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100% !important;
+        }
+        .month-view.print-mode .month-grid {
+            flex: 1 !important;
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
+            grid-auto-rows: 1fr !important;
+            height: 100% !important;
+            border: 1px solid #000 !important;
+        }
+        .month-view.print-mode .month-day-cell {
+            height: 100% !important;
+            min-height: 0 !important;
+            border: 1px solid #000 !important;
+        }
+        .month-view.print-mode .month-day-cell.empty-cell {
+            display: none !important; /* Remove semanas vazias no final */
+        }
+    `;
+    document.head.appendChild(style);
+    
+    element.classList.add('print-mode');
+    
+    var opt = {
+        margin: 0,
+        filename: 'Agenda_Mensal_' + monthTitle.replace(' ', '_') + '.pdf',
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            logging: false,
+            letterRendering: true,
+            width: 1122,
+            height: 794
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(function() {
+        printHeader.style.display = 'none';
+        element.classList.remove('print-mode');
+        var tempStyle = document.getElementById('pdf-temp-style');
+        if (tempStyle) tempStyle.remove();
+    }).catch(function(err) {
+        console.error("Erro na geração do PDF:", err);
+        printHeader.style.display = 'none';
+        element.classList.remove('print-mode');
+        var tempStyle = document.getElementById('pdf-temp-style');
+        if (tempStyle) tempStyle.remove();
+    });
 }
