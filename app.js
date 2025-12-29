@@ -265,6 +265,15 @@ function createDayCardGrid(date) {
         dayData.lines = Array(30).fill(null).map(function() { return { text: '', spans: [] }; });
     }
     
+    var contentColumns = document.createElement('div');
+    contentColumns.className = 'day-content-columns';
+    var columnParts = [
+        document.createElement('div'),
+        document.createElement('div'),
+        document.createElement('div')
+    ];
+    columnParts.forEach(function(col) { col.className = 'day-column-part'; });
+
     for (var i = 0; i < 30; i++) {
         var line = dayData.lines[i] || { text: '', spans: [] };
         var lineWrapper = document.createElement('div');
@@ -281,8 +290,12 @@ function createDayCardGrid(date) {
         }
         lineWrapper.appendChild(lineNum);
         lineWrapper.appendChild(lineDiv);
-        content.appendChild(lineWrapper);
+        
+        var colIndex = Math.floor(i / 10);
+        columnParts[colIndex].appendChild(lineWrapper);
     }
+    columnParts.forEach(function(col) { contentColumns.appendChild(col); });
+    content.appendChild(contentColumns);
 
     card.appendChild(header);
     card.appendChild(content);
@@ -474,71 +487,29 @@ function exportMonthToPdf() {
     printHeader.style.display = 'block';
     printTitle.textContent = monthTitle;
     
-    // Injetar estilos temporários para o PDF ocupar a página inteira
-    var style = document.createElement('style');
-    style.id = 'pdf-temp-style';
-    style.innerHTML = `
-        .month-view.print-mode {
-            width: 297mm !important;
-            height: 210mm !important;
-            padding: 5mm !important;
-            margin: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            background: white !important;
-        }
-        .month-view.print-mode .month-calendar {
-            flex: 1 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            height: 100% !important;
-        }
-        .month-view.print-mode .month-grid {
-            flex: 1 !important;
-            display: grid !important;
-            grid-template-columns: repeat(7, 1fr) !important;
-            grid-auto-rows: 1fr !important;
-            height: 100% !important;
-            border: 1px solid #000 !important;
-        }
-        .month-view.print-mode .month-day-cell {
-            height: 100% !important;
-            min-height: 0 !important;
-            border: 1px solid #000 !important;
-        }
-        .month-view.print-mode .month-day-cell.empty-cell {
-            display: none !important; /* Remove semanas vazias no final */
-        }
-    `;
-    document.head.appendChild(style);
-    
     element.classList.add('print-mode');
     
+    // Ajuste para evitar cortes: html2pdf com auto-paging
     var opt = {
-        margin: 0,
+        margin: [10, 5, 10, 5], // Margens superior, esquerda, inferior, direita
         filename: 'Agenda_Mensal_' + monthTitle.replace(' ', '_') + '.pdf',
-        image: { type: 'jpeg', quality: 1.0 },
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 2, 
             useCORS: true, 
             logging: false,
-            letterRendering: true,
-            width: 1122,
-            height: 794
+            letterRendering: true
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().set(opt).from(element).save().then(function() {
         printHeader.style.display = 'none';
         element.classList.remove('print-mode');
-        var tempStyle = document.getElementById('pdf-temp-style');
-        if (tempStyle) tempStyle.remove();
     }).catch(function(err) {
         console.error("Erro na geração do PDF:", err);
         printHeader.style.display = 'none';
         element.classList.remove('print-mode');
-        var tempStyle = document.getElementById('pdf-temp-style');
-        if (tempStyle) tempStyle.remove();
     });
 }
