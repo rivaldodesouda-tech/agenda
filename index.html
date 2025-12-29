@@ -8,8 +8,9 @@
     <meta name="format-detection" content="telephone=no">
     <title>Planejador de Agenda Interativo</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Biblioteca para gerar PDF -->
+    <!-- Biblioteca para gerar PDF e Captura de Tela -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div id="app">
@@ -28,6 +29,7 @@
                 <button id="printMonthBtn" class="btn btn-print">🖨️ Imprimir Mês</button>
                 <button id="exportPdfBtn" class="btn btn-pdf" style="display:none;">📄 Exportar PDF</button>
                 <button id="printWeekBtn" class="btn btn-print">🖨️ Imprimir Semana</button>
+                <button id="screenshotBtn" class="btn btn-secondary">📸 Capturar Tela</button>
                 <button id="exportDataBtn" class="btn btn-secondary">💾 Exportar Dados</button>
                 <input type="file" id="importFileInput" style="display: none;" accept=".json">
                 <button id="importDataBtn" class="btn btn-secondary">📥 Importar Dados</button>
@@ -572,9 +574,24 @@
             document.getElementById('closeDayEdit').onclick = closeDayEdit;
             
             document.getElementById('exportDataBtn').onclick = exportDataToJson;
-            document.getElementById('importDataBtn').onclick = function() {
+            
+            document.getElementById('importDataBtn').addEventListener('click', function() {
                 document.getElementById('importFileInput').click();
-            };
+            });
+
+            document.getElementById('screenshotBtn').addEventListener('click', function() {
+                var target = appState.view === 'week' ? document.getElementById('weekView') : document.getElementById('monthView');
+                html2canvas(target, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    useCORS: true
+                }).then(function(canvas) {
+                    var link = document.createElement('a');
+                    link.download = 'planejador-' + appState.view + '-' + getDateString(appState.currentDate) + '.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            });
 
             document.getElementById('importFileInput').addEventListener('change', function(event) {
                 var file = event.target.files[0];
@@ -610,21 +627,19 @@
             document.getElementById('printWeekBtn').onclick = function() {
                 appState.view = 'week';
                 renderWeekView();
+                alert("Dica: Selecione 'Paisagem' (Landscape) e 'A4' para a impressão semanal.");
                 setTimeout(function() { window.print(); }, 500);
             };
             
             document.getElementById('printMonthBtn').onclick = function() {
                 appState.view = 'month';
                 renderMonthView();
-                var element = document.getElementById('monthView');
-                element.classList.add('print-mode');
-                setTimeout(function() { 
-                    window.print(); 
-                    element.classList.remove('print-mode');
-                }, 500);
+                alert("Dica: Selecione 'Paisagem' (Landscape) e 'A2' para a impressão mensal.");
+                setTimeout(function() { window.print(); }, 500);
             };
             
             document.getElementById('printDay').onclick = function() {
+                alert("Dica: Selecione 'Retrato' (Portrait) e 'A4' para a impressão diária.");
                 window.print();
             };
         });
