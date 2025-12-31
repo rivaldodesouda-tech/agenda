@@ -364,3 +364,33 @@ body {
         }
     }
 }
+
+/* PALETA DE CORES EM DUAS LINHAS */
+.toolbar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.color-buttons {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr); /* 11 colunas para distribuir 21 cores em 2 linhas */
+    gap: 4px;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.color-btn:active {
+    transform: scale(0.9);
+}
